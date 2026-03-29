@@ -9,6 +9,20 @@ extension SCWindow: @unchecked @retroactive Sendable {}
 final class CaptureService {
     private let selectionOverlayController = SelectionOverlayController()
 
+    func activeDisplayName() -> String? {
+        activeScreen()?.localizedName
+    }
+
+    func activeWindowDisplayName() -> String? {
+        do {
+            let windowInfo = try frontmostWindowInfo()
+            let midpoint = CGPoint(x: windowInfo.bounds.midX, y: windowInfo.bounds.midY)
+            return NSScreen.screens.first(where: { $0.frame.contains(midpoint) })?.localizedName
+        } catch {
+            return activeDisplayName()
+        }
+    }
+
     func captureArea() async throws -> CGImage {
         try await PermissionManager.ensureScreenCaptureAccess()
 
@@ -87,17 +101,22 @@ final class CaptureService {
     }
 
     private func activeWindow() async throws -> SCWindow {
-        let windowID = try frontmostWindowID()
+        let windowInfo = try frontmostWindowInfo()
         let content = try await shareableContent()
 
-        guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
+        guard let window = content.windows.first(where: { $0.windowID == windowInfo.id }) else {
             throw ClipforgeError.activeWindowUnavailable
         }
 
         return window
     }
 
-    private func frontmostWindowID() throws -> CGWindowID {
+    private struct FrontmostWindowInfo {
+        let id: CGWindowID
+        let bounds: CGRect
+    }
+
+    private func frontmostWindowInfo() throws -> FrontmostWindowInfo {
         guard let frontmostApplication = NSWorkspace.shared.frontmostApplication else {
             throw ClipforgeError.activeWindowUnavailable
         }
@@ -128,7 +147,10 @@ final class CaptureService {
                 rect.height >= 32
             {
                 if let windowNumber = info[kCGWindowNumber as String] as? NSNumber {
-                    return CGWindowID(windowNumber.uint32Value)
+                    return FrontmostWindowInfo(
+                        id: CGWindowID(windowNumber.uint32Value),
+                        bounds: rect
+                    )
                 }
             }
         }

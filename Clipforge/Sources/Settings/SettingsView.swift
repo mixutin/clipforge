@@ -93,10 +93,33 @@ struct SettingsView: View {
 
                 Toggle("Save a local screenshot copy after capture", isOn: settings.binding(for: \.saveLocalScreenshotEnabled))
 
-                Picker("Filename format", selection: settings.binding(for: \.filenameMode)) {
+                Picker("Filename style", selection: settings.binding(for: \.filenameMode)) {
                     ForEach(AppSettings.FilenameMode.allCases) { mode in
                         Text(mode.title).tag(mode)
                     }
+                }
+
+                Text(settings.filenameMode.helpText)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                if settings.filenameMode == .customTemplate {
+                    TextField(
+                        "clipforge-{date}-{time}-{display_name}-{random_suffix}",
+                        text: settings.binding(for: \.filenameTemplate)
+                    )
+                    .textFieldStyle(.roundedBorder)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Placeholders: `{date}`, `{time}`, `{timestamp}`, `{display_name}`, `{source_name}`, `{random_suffix}`")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+
+                    Text("Preview: `\(FilenameGenerator.previewBase(using: settings.currentSettings))`")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {

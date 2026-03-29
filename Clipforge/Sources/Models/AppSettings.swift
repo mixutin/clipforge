@@ -34,6 +34,8 @@ struct AppSettings: Sendable {
     enum FilenameMode: String, CaseIterable, Codable, Identifiable {
         case randomHex
         case timestamp
+        case dateTimeDisplay
+        case customTemplate
 
         var id: Self { self }
 
@@ -43,6 +45,23 @@ struct AppSettings: Sendable {
                 return "Random Hex"
             case .timestamp:
                 return "Timestamp"
+            case .dateTimeDisplay:
+                return "Date + Display"
+            case .customTemplate:
+                return "Custom Template"
+            }
+        }
+
+        var helpText: String {
+            switch self {
+            case .randomHex:
+                return "Keep filenames short and random, like `clipforge-a1b2c3d4e5f6`."
+            case .timestamp:
+                return "Use a timestamp-based name like `clipforge-20260329-173045`."
+            case .dateTimeDisplay:
+                return "Combine date, time, display name, and a random suffix for a more readable filename."
+            case .customTemplate:
+                return "Build your own filename template with placeholders like `{date}` and `{display_name}`."
             }
         }
     }
@@ -258,6 +277,7 @@ struct AppSettings: Sendable {
     var localSaveFolder: String
     var captureDestinationMode: CaptureDestinationMode
     var filenameMode: FilenameMode
+    var filenameTemplate: String
     var uploadCopyFormat: UploadCopyFormat
     var postUploadAction: PostUploadAction
 
@@ -267,6 +287,8 @@ struct AppSettings: Sendable {
             .appendingPathComponent("Clipforge", isDirectory: true)
             .path(percentEncoded: false) ?? NSString(string: "~/Pictures/Clipforge").expandingTildeInPath
     }
+
+    static let defaultCustomFilenameTemplate = "clipforge-{date}-{time}-{display_name}-{random_suffix}"
 
     static let `default` = AppSettings(
         serverURL: "http://127.0.0.1:8000",
@@ -280,6 +302,7 @@ struct AppSettings: Sendable {
         localSaveFolder: AppSettings.defaultLocalSaveFolder,
         captureDestinationMode: .automatic,
         filenameMode: .randomHex,
+        filenameTemplate: AppSettings.defaultCustomFilenameTemplate,
         uploadCopyFormat: .url,
         postUploadAction: .openLink
     )

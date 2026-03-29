@@ -30,6 +30,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Upload progress UI for larger uploads
 - Optional annotation review with arrows, boxes, highlights, and freehand pen markup
 - Configurable image format output with PNG, JPEG, and JPEG quality controls
+- Richer filename styles with template placeholders for date, time, display name, source name, and random suffix
 - Local recent upload history
 - Thumbnail previews in recent uploads
 - Local-first settings

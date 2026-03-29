@@ -108,6 +108,7 @@ final class UploadClientTests: XCTestCase {
             localSaveFolder: "/tmp",
             captureDestinationMode: .serverUpload,
             filenameMode: .randomHex,
+            filenameTemplate: AppSettings.defaultCustomFilenameTemplate,
             uploadCopyFormat: .url,
             postUploadAction: .openLink
         )

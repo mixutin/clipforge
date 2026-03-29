@@ -18,6 +18,7 @@ final class SettingsStore: ObservableObject {
         static let localFolder = "settings.localFolder"
         static let captureDestinationMode = "settings.captureDestinationMode"
         static let filenameMode = "settings.filenameMode"
+        static let filenameTemplate = "settings.filenameTemplate"
         static let uploadCopyFormat = "settings.uploadCopyFormat"
         static let postUploadAction = "settings.postUploadAction"
         static let hotkeyKeyCode = "settings.hotkey.keyCode"
@@ -41,6 +42,7 @@ final class SettingsStore: ObservableObject {
             Keys.localFolder: AppSettings.default.localSaveFolder,
             Keys.captureDestinationMode: AppSettings.default.captureDestinationMode.rawValue,
             Keys.filenameMode: AppSettings.default.filenameMode.rawValue,
+            Keys.filenameTemplate: AppSettings.default.filenameTemplate,
             Keys.uploadCopyFormat: AppSettings.default.uploadCopyFormat.rawValue,
             Keys.postUploadAction: AppSettings.default.postUploadAction.rawValue,
             Keys.hotkeyKeyCode: HotkeyDescriptor.default.keyCode,
@@ -160,6 +162,15 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    var filenameTemplate: String {
+        get { defaults.string(forKey: Keys.filenameTemplate) ?? AppSettings.default.filenameTemplate }
+        set {
+            let trimmedTemplate = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmedTemplate.isEmpty ? AppSettings.default.filenameTemplate : trimmedTemplate, forKey: Keys.filenameTemplate)
+            objectWillChange.send()
+        }
+    }
+
     var uploadCopyFormat: AppSettings.UploadCopyFormat {
         get {
             let rawValue = defaults.string(forKey: Keys.uploadCopyFormat) ?? AppSettings.default.uploadCopyFormat.rawValue
@@ -210,6 +221,7 @@ final class SettingsStore: ObservableObject {
             localSaveFolder: localSaveFolder,
             captureDestinationMode: captureDestinationMode,
             filenameMode: filenameMode,
+            filenameTemplate: filenameTemplate,
             uploadCopyFormat: uploadCopyFormat,
             postUploadAction: postUploadAction
         )

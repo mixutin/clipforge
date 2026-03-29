@@ -187,7 +187,11 @@ final class AppController: ObservableObject {
             let cgImage = try await captureService.captureArea()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    displayName: captureService.activeDisplayName(),
+                    sourceName: "screen"
+                ),
                 settings: currentSettings
             )
             try await deliver(asset: asset)
@@ -209,7 +213,11 @@ final class AppController: ObservableObject {
             let cgImage = try await captureService.captureFullScreen()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    displayName: captureService.activeDisplayName(),
+                    sourceName: "screen"
+                ),
                 settings: currentSettings
             )
             try await deliver(asset: asset)
@@ -227,7 +235,11 @@ final class AppController: ObservableObject {
             let cgImage = try await captureService.captureActiveWindow()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    displayName: captureService.activeWindowDisplayName(),
+                    sourceName: NSWorkspace.shared.frontmostApplication?.localizedName ?? "window"
+                ),
                 settings: currentSettings
             )
             try await deliver(asset: asset)
@@ -243,7 +255,10 @@ final class AppController: ObservableObject {
         do {
             let currentSettings = settingsStore.currentSettings
             let asset = try clipboardService.loadImageAsset(
-                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    sourceName: "clipboard"
+                ),
                 settings: currentSettings
             )
             try await deliver(asset: asset, forceUpload: true)
@@ -260,7 +275,10 @@ final class AppController: ObservableObject {
             let currentSettings = settingsStore.currentSettings
             let asset = try await DroppedImageLoader.loadImageAsset(
                 from: providers,
-                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    sourceName: "drop"
+                ),
                 settings: currentSettings
             )
             try await deliver(asset: asset, forceUpload: true)
@@ -436,6 +454,21 @@ final class AppController: ObservableObject {
         default:
             return .seconds(2)
         }
+    }
+
+    private func makeFilenameBase(
+        settings: AppSettings,
+        displayName: String? = nil,
+        sourceName: String? = nil
+    ) -> String {
+        FilenameGenerator.makeBase(
+            using: settings,
+            context: FilenameGenerator.Context(
+                now: Date(),
+                displayName: displayName,
+                sourceName: sourceName
+            )
+        )
     }
 
     private func saveLocalCopyIfNeeded(asset: CapturedAsset, settings: AppSettings) -> LocalSaveStatus {

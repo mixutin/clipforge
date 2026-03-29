@@ -27,6 +27,47 @@ final class FilenameGeneratorTests: XCTestCase {
         XCTAssertNotNil(suffix.range(of: "^[0-9a-f]{12}$", options: .regularExpression))
     }
 
+    func testCustomTemplateUsesPlaceholdersAndSanitizesDisplayName() {
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        var settings = sampleSettings(imageFormatMode: .automatic, jpegCompressionQuality: 0.92)
+        settings.filenameMode = .customTemplate
+        settings.filenameTemplate = "shot-{date}-{time}-{display_name}-{random_suffix}"
+        let expectedDate = formatted(date, pattern: "yyyyMMdd")
+        let expectedTime = formatted(date, pattern: "HHmmss")
+
+        let result = FilenameGenerator.makeBase(
+            using: settings,
+            context: FilenameGenerator.Context(
+                now: date,
+                displayName: "Studio Display",
+                sourceName: "screen",
+                randomSuffix: "abc123"
+            )
+        )
+
+        XCTAssertEqual(result, "shot-\(expectedDate)-\(expectedTime)-studio-display-abc123")
+    }
+
+    func testCustomTemplateRemovesMissingPlaceholdersCleanly() {
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        var settings = sampleSettings(imageFormatMode: .automatic, jpegCompressionQuality: 0.92)
+        settings.filenameMode = .customTemplate
+        settings.filenameTemplate = "clipforge-{date}-{display_name}-{random_suffix}"
+        let expectedDate = formatted(date, pattern: "yyyyMMdd")
+
+        let result = FilenameGenerator.makeBase(
+            using: settings,
+            context: FilenameGenerator.Context(
+                now: date,
+                displayName: nil,
+                sourceName: "clipboard",
+                randomSuffix: "ff99aa"
+            )
+        )
+
+        XCTAssertEqual(result, "clipforge-\(expectedDate)-ff99aa")
+    }
+
     func testMarkdownUploadCopyFormatUsesImageSyntax() {
         let result = AppSettings.UploadCopyFormat.markdownImage.formattedString(
             remoteURL: "https://example.com/uploads/clipforge-test.png",
@@ -92,6 +133,7 @@ final class FilenameGeneratorTests: XCTestCase {
             localSaveFolder: "/tmp",
             captureDestinationMode: .serverUpload,
             filenameMode: .randomHex,
+            filenameTemplate: AppSettings.defaultCustomFilenameTemplate,
             uploadCopyFormat: .url,
             postUploadAction: .openLink
         )
@@ -135,5 +177,13 @@ final class FilenameGeneratorTests: XCTestCase {
 
         image.unlockFocus()
         return image
+    }
+
+    private func formatted(_ date: Date, pattern: String) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = pattern
+        return formatter.string(from: date)
     }
 }
