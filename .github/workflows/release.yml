@@ -53,7 +53,6 @@ jobs:
 
       - name: Import Developer ID certificate
         id: notarization
-        if: ${{ secrets.APPLE_DEVELOPER_ID_CERT_P12_BASE64 != '' && secrets.APPLE_DEVELOPER_ID_APPLICATION != '' && secrets.APPLE_NOTARY_APPLE_ID != '' && secrets.APPLE_NOTARY_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
         env:
           APPLE_DEVELOPER_ID_CERT_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERT_P12_BASE64 }}
           APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD }}
@@ -62,6 +61,11 @@ jobs:
           APPLE_NOTARY_APPLE_ID: ${{ secrets.APPLE_NOTARY_APPLE_ID }}
           APPLE_NOTARY_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_NOTARY_APP_SPECIFIC_PASSWORD }}
         run: |
+          if [ -z "$APPLE_DEVELOPER_ID_CERT_P12_BASE64" ] || [ -z "$APPLE_DEVELOPER_ID_CERT_PASSWORD" ] || [ -z "$APPLE_DEVELOPER_ID_APPLICATION" ] || [ -z "$APPLE_NOTARY_APPLE_ID" ] || [ -z "$APPLE_NOTARY_APP_SPECIFIC_PASSWORD" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           KEYCHAIN_PATH="$RUNNER_TEMP/clipforge-signing.keychain-db"
           KEYCHAIN_PASSWORD="$(openssl rand -hex 20)"
           CERT_PATH="$RUNNER_TEMP/clipforge-developer-id.p12"
