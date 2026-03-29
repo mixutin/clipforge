@@ -1,6 +1,6 @@
 cask "clipforge" do
   version "0.5.0"
-  sha256 "25adc1abce39b7fccc03de1ba5d3319839767e8658b7ff4f39de620f663cd0cb"
+  sha256 "a8103202ddc89b2003d22aa3a174563ca3cd24997f4de0f8bbf30da43c5f3b56"
 
   url "https://github.com/mixutin/clipforge/releases/download/v#{version}/Clipforge-#{version}.dmg"
   name "Clipforge"
