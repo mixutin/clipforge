@@ -12,6 +12,7 @@ The list is intentionally opinionated:
 
 ## Recently Completed
 
+- [x] Add support for multiple server profiles in the app
 - [x] Add a server endpoint for deleting uploads with token auth
 - [x] Add a searchable upload history view outside the compact menu bar list
 - [x] Add richer filename templates with placeholders like date, time, display name, and random suffix
@@ -37,8 +38,6 @@ The list is intentionally opinionated:
 - [x] Disable CORS by default unless explicitly configured on the server
 
 ## Next
-
-- [ ] Add support for multiple server profiles in the app
 
 ## Later
 

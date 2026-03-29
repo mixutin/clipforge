@@ -6,8 +6,10 @@ final class SettingsStore: ObservableObject {
     static let shared = SettingsStore()
 
     private enum Keys {
-        static let serverURL = "settings.serverURL"
+        static let legacyServerURL = "settings.serverURL"
         static let legacyAPIToken = "settings.apiToken"
+        static let serverProfiles = "settings.serverProfiles"
+        static let activeServerProfileID = "settings.activeServerProfileID"
         static let autoCopy = "settings.autoCopy"
         static let annotationReview = "settings.annotationReview"
         static let imageFormatMode = "settings.imageFormatMode"
@@ -25,14 +27,19 @@ final class SettingsStore: ObservableObject {
         static let hotkeyModifiers = "settings.hotkey.modifiers"
     }
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+    private let keychain: KeychainClient
+
+    private var cachedServerProfiles: [ServerProfile]
+    private var activeServerProfileIDCache: String
     private var apiTokenCache: String
 
-    private init() {
-        apiTokenCache = ""
+    init(defaults: UserDefaults = .standard, keychain: KeychainClient = .live) {
+        self.defaults = defaults
+        self.keychain = keychain
+        self.apiTokenCache = ""
 
         defaults.register(defaults: [
-            Keys.serverURL: AppSettings.default.serverURL,
             Keys.autoCopy: AppSettings.default.autoCopyLinkEnabled,
             Keys.annotationReview: AppSettings.default.annotationReviewEnabled,
             Keys.imageFormatMode: AppSettings.default.imageFormatMode.rawValue,
@@ -49,15 +56,48 @@ final class SettingsStore: ObservableObject {
             Keys.hotkeyModifiers: HotkeyDescriptor.default.modifiers
         ])
 
-        migrateLegacyAPITokenIfNeeded()
-        apiTokenCache = KeychainService.loadToken()
+        let persistedState = Self.loadOrMigrateServerProfiles(defaults: defaults, keychain: keychain)
+        cachedServerProfiles = persistedState.profiles
+        activeServerProfileIDCache = persistedState.activeProfileID
+        apiTokenCache = keychain.loadToken(activeServerProfileIDCache)
+    }
+
+    var serverProfiles: [ServerProfile] {
+        cachedServerProfiles
+    }
+
+    var activeServerProfileID: String {
+        get { activeServerProfileIDCache }
+        set { selectServerProfile(id: newValue) }
+    }
+
+    var activeServerProfile: ServerProfile {
+        cachedServerProfiles.first(where: { $0.id == activeServerProfileIDCache }) ?? cachedServerProfiles[0]
+    }
+
+    var activeServerProfileDisplayName: String {
+        activeServerProfile.displayName
+    }
+
+    var activeServerProfileName: String {
+        get { activeServerProfile.name }
+        set {
+            updateActiveProfile { profile in
+                profile.name = newValue
+            }
+        }
+    }
+
+    var canDeleteServerProfile: Bool {
+        cachedServerProfiles.count > 1
     }
 
     var serverURL: String {
-        get { defaults.string(forKey: Keys.serverURL) ?? AppSettings.default.serverURL }
+        get { activeServerProfile.serverURL }
         set {
-            defaults.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: Keys.serverURL)
-            objectWillChange.send()
+            updateActiveProfile { profile in
+                profile.serverURL = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
         }
     }
 
@@ -68,9 +108,9 @@ final class SettingsStore: ObservableObject {
             apiTokenCache = trimmedValue
 
             if trimmedValue.isEmpty {
-                _ = KeychainService.deleteToken()
+                _ = keychain.deleteToken(activeServerProfileIDCache)
             } else {
-                _ = KeychainService.saveToken(trimmedValue)
+                _ = keychain.saveToken(trimmedValue, activeServerProfileIDCache)
             }
 
             objectWillChange.send()
@@ -210,7 +250,7 @@ final class SettingsStore: ObservableObject {
 
     var currentSettings: AppSettings {
         AppSettings(
-            serverURL: serverURL,
+            serverURL: activeServerProfile.trimmedServerURL,
             apiToken: apiToken,
             autoCopyLinkEnabled: autoCopyLinkEnabled,
             annotationReviewEnabled: annotationReviewEnabled,
@@ -270,7 +310,7 @@ final class SettingsStore: ObservableObject {
     }
 
     func uploadConfigurationState() -> UploadConfigurationState {
-        let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedURL = activeServerProfile.trimmedServerURL
         let trimmedToken = apiToken.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if trimmedURL.isEmpty && trimmedToken.isEmpty {
@@ -292,23 +332,179 @@ final class SettingsStore: ObservableObject {
         return .ready(currentSettings)
     }
 
-    private func migrateLegacyAPITokenIfNeeded() {
-        let existingKeychainToken = KeychainService.loadToken()
-        guard existingKeychainToken.isEmpty else {
-            defaults.removeObject(forKey: Keys.legacyAPIToken)
-            return
-        }
+    func createServerProfile() {
+        let newProfile = ServerProfile(
+            name: suggestedNewProfileName(),
+            serverURL: ""
+        )
 
-        guard let legacyToken = defaults.string(forKey: Keys.legacyAPIToken)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              legacyToken.isEmpty == false
-        else {
-            defaults.removeObject(forKey: Keys.legacyAPIToken)
-            return
-        }
-
-        _ = KeychainService.saveToken(legacyToken)
-        defaults.removeObject(forKey: Keys.legacyAPIToken)
+        cachedServerProfiles.append(newProfile)
+        activeServerProfileIDCache = newProfile.id
+        apiTokenCache = ""
+        persistServerProfiles()
+        defaults.set(newProfile.id, forKey: Keys.activeServerProfileID)
+        objectWillChange.send()
     }
+
+    func deleteActiveServerProfile() {
+        guard canDeleteServerProfile else { return }
+
+        let profileToDelete = activeServerProfile
+        cachedServerProfiles.removeAll { $0.id == profileToDelete.id }
+        _ = keychain.deleteToken(profileToDelete.id)
+
+        let fallbackProfileID = cachedServerProfiles.first?.id ?? Self.defaultServerProfile().id
+        activeServerProfileIDCache = fallbackProfileID
+        apiTokenCache = keychain.loadToken(fallbackProfileID)
+        persistServerProfiles()
+        defaults.set(fallbackProfileID, forKey: Keys.activeServerProfileID)
+        objectWillChange.send()
+    }
+
+    private func selectServerProfile(id: String) {
+        guard cachedServerProfiles.contains(where: { $0.id == id }) else { return }
+        guard activeServerProfileIDCache != id else { return }
+
+        activeServerProfileIDCache = id
+        defaults.set(id, forKey: Keys.activeServerProfileID)
+        apiTokenCache = keychain.loadToken(id)
+        objectWillChange.send()
+    }
+
+    private func updateActiveProfile(_ mutate: (inout ServerProfile) -> Void) {
+        guard let index = cachedServerProfiles.firstIndex(where: { $0.id == activeServerProfileIDCache }) else {
+            return
+        }
+
+        var profile = cachedServerProfiles[index]
+        mutate(&profile)
+        cachedServerProfiles[index] = profile
+        persistServerProfiles()
+        objectWillChange.send()
+    }
+
+    private func persistServerProfiles() {
+        let encoder = JSONEncoder()
+        guard let data = try? encoder.encode(cachedServerProfiles) else { return }
+        defaults.set(data, forKey: Keys.serverProfiles)
+    }
+
+    private func suggestedNewProfileName() -> String {
+        var index = max(cachedServerProfiles.count + 1, 2)
+
+        while true {
+            let candidate = "Server \(index)"
+            let isTaken = cachedServerProfiles.contains {
+                $0.displayName.localizedCaseInsensitiveCompare(candidate) == .orderedSame
+            }
+
+            if isTaken == false {
+                return candidate
+            }
+
+            index += 1
+        }
+    }
+
+    private static func loadOrMigrateServerProfiles(
+        defaults: UserDefaults,
+        keychain: KeychainClient
+    ) -> PersistedServerProfileState {
+        if
+            let data = defaults.data(forKey: Keys.serverProfiles),
+            let decodedProfiles = try? JSONDecoder().decode([ServerProfile].self, from: data),
+            decodedProfiles.isEmpty == false
+        {
+            let activeProfileID = resolvedActiveProfileID(
+                storedProfileID: defaults.string(forKey: Keys.activeServerProfileID),
+                profiles: decodedProfiles
+            )
+
+            defaults.set(activeProfileID, forKey: Keys.activeServerProfileID)
+            return PersistedServerProfileState(
+                profiles: decodedProfiles,
+                activeProfileID: activeProfileID
+            )
+        }
+
+        let migratedProfile = migratedLegacyServerProfile(defaults: defaults)
+        let migratedProfiles = [migratedProfile]
+        let legacyToken = loadLegacyToken(defaults: defaults, keychain: keychain)
+
+        if legacyToken.isEmpty == false {
+            _ = keychain.saveToken(legacyToken, migratedProfile.id)
+        }
+
+        defaults.removeObject(forKey: Keys.legacyServerURL)
+        defaults.removeObject(forKey: Keys.legacyAPIToken)
+        _ = keychain.deleteLegacyToken()
+
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(migratedProfiles) {
+            defaults.set(data, forKey: Keys.serverProfiles)
+        }
+        defaults.set(migratedProfile.id, forKey: Keys.activeServerProfileID)
+
+        return PersistedServerProfileState(
+            profiles: migratedProfiles,
+            activeProfileID: migratedProfile.id
+        )
+    }
+
+    private static func migratedLegacyServerProfile(defaults: UserDefaults) -> ServerProfile {
+        let legacyURL = defaults.string(forKey: Keys.legacyServerURL)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let name = profileName(for: legacyURL, fallback: ServerProfile.defaultName)
+
+        return ServerProfile(
+            name: name,
+            serverURL: legacyURL
+        )
+    }
+
+    private static func loadLegacyToken(defaults: UserDefaults, keychain: KeychainClient) -> String {
+        let keychainToken = keychain.loadLegacyToken().trimmingCharacters(in: .whitespacesAndNewlines)
+        if keychainToken.isEmpty == false {
+            return keychainToken
+        }
+
+        return defaults.string(forKey: Keys.legacyAPIToken)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private static func resolvedActiveProfileID(
+        storedProfileID: String?,
+        profiles: [ServerProfile]
+    ) -> String {
+        if let storedProfileID, profiles.contains(where: { $0.id == storedProfileID }) {
+            return storedProfileID
+        }
+
+        return profiles.first?.id ?? defaultServerProfile().id
+    }
+
+    private static func defaultServerProfile() -> ServerProfile {
+        ServerProfile()
+    }
+
+    private static func profileName(for serverURL: String, fallback: String) -> String {
+        guard
+            serverURL.isEmpty == false,
+            let url = URL(string: serverURL),
+            let host = url.host
+        else {
+            return fallback
+        }
+
+        if host == "127.0.0.1" || host == "localhost" {
+            return "Local Server"
+        }
+
+        return host
+    }
+}
+
+private struct PersistedServerProfileState {
+    let profiles: [ServerProfile]
+    let activeProfileID: String
 }
 
 enum UploadConfigurationState {

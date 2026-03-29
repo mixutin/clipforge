@@ -9,13 +9,39 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Server") {
+                Picker("Active profile", selection: settings.binding(for: \.activeServerProfileID)) {
+                    ForEach(settings.serverProfiles) { profile in
+                        Text(profile.displayName).tag(profile.id)
+                    }
+                }
+
+                HStack {
+                    Button("New Profile") {
+                        settings.createServerProfile()
+                    }
+
+                    Button("Delete Profile") {
+                        settings.deleteActiveServerProfile()
+                    }
+                    .disabled(!settings.canDeleteServerProfile)
+
+                    Spacer()
+
+                    Text("\(settings.serverProfiles.count) profile\(settings.serverProfiles.count == 1 ? "" : "s")")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+
+                TextField("Profile name", text: settings.binding(for: \.activeServerProfileName))
+                    .textFieldStyle(.roundedBorder)
+
                 TextField("https://uploads.example.com", text: settings.binding(for: \.serverURL))
                     .textFieldStyle(.roundedBorder)
 
                 SecureField("Bearer token", text: settings.binding(for: \.apiToken))
                     .textFieldStyle(.roundedBorder)
 
-                Text("Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development. The API token is stored in your macOS Keychain. If you leave the server blank and use Automatic mode, Clipforge falls back to clipboard-only capture.")
+                Text("Each profile keeps its own server URL and API token locally. Tokens are stored in your macOS Keychain. Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development. If you leave the active server blank and use Automatic mode, Clipforge falls back to clipboard-only capture.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }

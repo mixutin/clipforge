@@ -73,7 +73,7 @@ final class AppController: ObservableObject {
         case .serverUpload:
             switch settingsStore.uploadConfigurationState() {
             case .ready(let settings):
-                return hostSummary(for: settings.serverURL)
+                return hostSummary(for: settings.serverURL, profileName: settingsStore.activeServerProfileDisplayName)
             case .notConfigured:
                 return "Server required"
             case .invalid:
@@ -82,7 +82,7 @@ final class AppController: ObservableObject {
         case .automatic:
             switch settingsStore.uploadConfigurationState() {
             case .ready(let settings):
-                return hostSummary(for: settings.serverURL)
+                return hostSummary(for: settings.serverURL, profileName: settingsStore.activeServerProfileDisplayName)
             case .notConfigured:
                 return "Auto: Clipboard"
             case .invalid:
@@ -702,11 +702,15 @@ final class AppController: ObservableObject {
         }
     }
 
-    private func hostSummary(for serverURL: String) -> String {
+    private func hostSummary(for serverURL: String, profileName: String) -> String {
         guard let url = URL(string: serverURL), let host = url.host else {
             return "Server not configured"
         }
 
-        return host
+        guard settingsStore.serverProfiles.count > 1 else {
+            return host
+        }
+
+        return "\(profileName) · \(host)"
     }
 }

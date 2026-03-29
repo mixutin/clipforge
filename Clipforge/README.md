@@ -16,6 +16,7 @@ Clipforge is a native macOS menu bar screenshot uploader that captures with Scre
 - Configurable PNG/JPEG output with JPEG quality control
 - Richer filename styles with built-in presets and custom placeholders
 - Bearer-token authenticated multipart uploads
+- Multiple named server profiles with per-profile Keychain token storage
 - Configurable URL, Markdown, or HTML copy formats for uploads
 - Upload progress UI in the menu bar popover
 - Searchable upload history window with copy and open actions
@@ -43,7 +44,7 @@ Clipforge is a native macOS menu bar screenshot uploader that captures with Scre
 
 3. Build and run the `Clipforge` scheme.
 4. Open `Clipforge > Settings` from the menu bar popover.
-5. Fill in:
+5. Create or select a server profile, then fill in:
    - server URL, for example `http://127.0.0.1:8000`
    - API token matching your Clipforge Server
 6. Trigger a capture from the menu bar or with the default hotkey `Command + Shift + 6`.

@@ -1,11 +1,54 @@
 import Foundation
 import Security
 
+struct KeychainClient: Sendable {
+    let loadToken: @Sendable (_ profileID: String) -> String
+    let saveToken: @Sendable (_ token: String, _ profileID: String) -> Bool
+    let deleteToken: @Sendable (_ profileID: String) -> Bool
+    let loadLegacyToken: @Sendable () -> String
+    let deleteLegacyToken: @Sendable () -> Bool
+
+    static let live = KeychainClient(
+        loadToken: { KeychainService.loadToken(profileID: $0) },
+        saveToken: { KeychainService.saveToken($0, profileID: $1) },
+        deleteToken: { KeychainService.deleteToken(profileID: $0) },
+        loadLegacyToken: { KeychainService.loadLegacyToken() },
+        deleteLegacyToken: { KeychainService.deleteLegacyToken() }
+    )
+}
+
 enum KeychainService {
     private static let serviceName = Bundle.main.bundleIdentifier ?? "com.clipforge.app"
-    private static let accountName = "clipforge.api-token"
+    private static let legacyAccountName = "clipforge.api-token"
 
-    static func loadToken() -> String {
+    static func loadLegacyToken() -> String {
+        loadToken(accountName: legacyAccountName)
+    }
+
+    static func loadToken(profileID: String) -> String {
+        loadToken(accountName: accountName(for: profileID))
+    }
+
+    @discardableResult
+    static func saveToken(_ token: String, profileID: String) -> Bool {
+        saveToken(token, accountName: accountName(for: profileID))
+    }
+
+    @discardableResult
+    static func deleteToken(profileID: String) -> Bool {
+        deleteToken(accountName: accountName(for: profileID))
+    }
+
+    @discardableResult
+    static func deleteLegacyToken() -> Bool {
+        deleteToken(accountName: legacyAccountName)
+    }
+
+    private static func accountName(for profileID: String) -> String {
+        "\(legacyAccountName).\(profileID)"
+    }
+
+    private static func loadToken(accountName: String) -> String {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
@@ -29,7 +72,7 @@ enum KeychainService {
     }
 
     @discardableResult
-    static func saveToken(_ token: String) -> Bool {
+    private static func saveToken(_ token: String, accountName: String) -> Bool {
         let encodedToken = Data(token.utf8)
 
         let query: [String: Any] = [
@@ -59,7 +102,7 @@ enum KeychainService {
     }
 
     @discardableResult
-    static func deleteToken() -> Bool {
+    private static func deleteToken(accountName: String) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,

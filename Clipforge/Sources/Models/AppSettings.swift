@@ -1,5 +1,35 @@
 import Foundation
 
+struct ServerProfile: Codable, Equatable, Hashable, Identifiable, Sendable {
+    var id: String
+    var name: String
+    var serverURL: String
+
+    init(
+        id: String = UUID().uuidString,
+        name: String = ServerProfile.defaultName,
+        serverURL: String = AppSettings.default.serverURL
+    ) {
+        self.id = id
+        self.name = name
+        self.serverURL = serverURL
+    }
+
+    var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var trimmedServerURL: String {
+        serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var displayName: String {
+        trimmedName.isEmpty ? "Unnamed Server" : trimmedName
+    }
+
+    static let defaultName = "Default Server"
+}
+
 struct AppSettings: Sendable {
     enum CaptureDestinationMode: String, CaseIterable, Codable, Identifiable {
         case automatic
@@ -291,7 +321,7 @@ struct AppSettings: Sendable {
     static let defaultCustomFilenameTemplate = "clipforge-{date}-{time}-{display_name}-{random_suffix}"
 
     static let `default` = AppSettings(
-        serverURL: "http://127.0.0.1:8000",
+        serverURL: "",
         apiToken: "",
         autoCopyLinkEnabled: true,
         annotationReviewEnabled: false,

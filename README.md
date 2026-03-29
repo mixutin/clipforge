@@ -22,6 +22,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - ScreenCaptureKit-based screenshots
 - Bearer-token authenticated multipart uploads
 - Keychain-backed API token storage
+- Multiple named server profiles in the macOS app
 - Automatic clipboard copy of uploaded URLs, Markdown, or HTML image tags
 - Configurable post-upload quick actions
 - Clipboard-only capture mode when you do not want to use a server
@@ -74,6 +75,7 @@ open Clipforge.xcodeproj
 
 Build and run the `Clipforge` scheme, then configure:
 
+- one or more named server profiles
 - server URL, for example `http://127.0.0.1:8000`
 - API token matching your server config
 
@@ -83,7 +85,7 @@ Build and run the `Clipforge` scheme, then configure:
 2. Trigger `Capture Area` from the popover or with the global hotkey
 3. Drag to select a region
 4. Clipforge captures the image with ScreenCaptureKit
-5. The image uploads to your self-hosted server
+5. The image uploads to the active self-hosted server profile
 6. The server returns a public URL
 7. Clipforge copies the URL to the clipboard and shows a success toast
 

@@ -36,6 +36,7 @@ Keep these principles intact:
 - Clipboard-only capture mode
 - Automatic fallback to clipboard mode when no server is configured
 - Server upload flow with bearer token auth
+- Multiple named server profiles with one active upload target
 - Automatic copy of uploaded URL to clipboard when enabled
 - Drag-and-drop image upload support in the menu bar popover
 - Clipboard image upload
