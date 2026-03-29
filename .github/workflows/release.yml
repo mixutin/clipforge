@@ -1,0 +1,168 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+  pages: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    name: Build And Publish Release
+    runs-on: macos-latest
+
+    outputs:
+      artifact_name: ${{ steps.feed.outputs.artifact_name }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Ensure Sparkle signing key is configured
+        env:
+          SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_ED_KEY" ]; then
+            echo "Missing required repo secret: SPARKLE_PRIVATE_ED_KEY" >&2
+            exit 1
+          fi
+
+      - name: Build release DMG
+        id: build
+        run: |
+          BUILD_ROOT="$RUNNER_TEMP/clipforge-release"
+          mkdir -p "$BUILD_ROOT"
+          scripts/build_release_dmg.sh "$BUILD_ROOT" | tee "$RUNNER_TEMP/build_release_dmg.log"
+
+          APP_PATH="$(sed -n 's/^APP_PATH=//p' "$RUNNER_TEMP/build_release_dmg.log" | tail -n 1)"
+          DMG_PATH="$(sed -n 's/^DMG_PATH=//p' "$RUNNER_TEMP/build_release_dmg.log" | tail -n 1)"
+          VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist")"
+          BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Contents/Info.plist")"
+          EXPECTED_TAG="v$VERSION"
+
+          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match app version $VERSION." >&2
+            exit 1
+          fi
+
+          echo "app_path=$APP_PATH" >> "$GITHUB_OUTPUT"
+          echo "dmg_path=$DMG_PATH" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.build.outputs.version }}
+          DMG_PATH: ${{ steps.build.outputs.dmg_path }}
+        run: |
+          TITLE="Clipforge $VERSION"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DMG_PATH" --clobber
+            gh release edit "$TAG" --title "$TITLE" --latest
+          else
+            gh release create "$TAG" "$DMG_PATH" --title "$TITLE" --generate-notes --latest
+          fi
+
+      - name: Download Sparkle tools
+        run: |
+          curl -L -o "$RUNNER_TEMP/Sparkle-2.9.0.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.9.0/Sparkle-2.9.0.tar.xz
+          tar -xf "$RUNNER_TEMP/Sparkle-2.9.0.tar.xz" -C "$RUNNER_TEMP"
+
+      - name: Build Sparkle appcast feed
+        id: feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.build.outputs.version }}
+          DMG_PATH: ${{ steps.build.outputs.dmg_path }}
+          SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+        run: |
+          FEED_DIR="$RUNNER_TEMP/release-feed"
+          PAGES_BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          RELEASE_NOTES_PATH="$FEED_DIR/Clipforge-$VERSION.md"
+          FEED_DMG_PATH="$FEED_DIR/Clipforge-$VERSION.dmg"
+
+          mkdir -p "$FEED_DIR"
+          cp "$DMG_PATH" "$FEED_DMG_PATH"
+          gh release view "$TAG" --json body --jq .body > "$RELEASE_NOTES_PATH"
+
+          if [ ! -s "$RELEASE_NOTES_PATH" ] || [ "$(tr -d '\n\r\t ' < "$RELEASE_NOTES_PATH")" = "null" ]; then
+            cat > "$RELEASE_NOTES_PATH" <<EOF
+            # Clipforge $VERSION
+
+            Download and install the latest Clipforge release from GitHub.
+            EOF
+          fi
+
+          printf '%s' "$SPARKLE_PRIVATE_ED_KEY" | "$RUNNER_TEMP/bin/generate_appcast" \
+            --ed-key-file - \
+            --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/$TAG/" \
+            --release-notes-url-prefix "$PAGES_BASE_URL/" \
+            --link "https://github.com/${{ github.repository }}" \
+            "$FEED_DIR"
+
+          rm -f "$FEED_DMG_PATH"
+
+          cat > "$FEED_DIR/index.html" <<EOF
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Clipforge Updates</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 48px auto; max-width: 680px; padding: 0 20px; background: #0f1115; color: #f4f5f7; }
+                a { color: #8bc3ff; }
+                code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 6px; }
+              </style>
+            </head>
+            <body>
+              <h1>Clipforge Updates</h1>
+              <p>This page hosts the Sparkle appcast feed for Clipforge.</p>
+              <p>Latest release: <a href="https://github.com/${{ github.repository }}/releases/tag/$TAG">$TAG</a></p>
+              <p>Appcast: <a href="appcast.xml"><code>appcast.xml</code></a></p>
+            </body>
+          </html>
+          EOF
+
+          echo "artifact_name=clipforge-pages" >> "$GITHUB_OUTPUT"
+          echo "feed_dir=$FEED_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          name: ${{ steps.feed.outputs.artifact_name }}
+          path: ${{ steps.feed.outputs.feed_dir }}
+
+  deploy-pages:
+    name: Publish Sparkle Feed
+    needs: build-release
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ needs.build-release.outputs.artifact_name }}

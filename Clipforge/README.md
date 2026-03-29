@@ -12,6 +12,7 @@ Clipforge is a native macOS menu bar screenshot uploader that captures with Scre
 - Bearer-token authenticated multipart uploads
 - Local history and optional local screenshot saving
 - Small floating success and error toast panels
+- Sparkle-powered in-app update checks
 
 ## Project Layout
 
@@ -52,6 +53,14 @@ SwiftUI powers the popover and settings UI, while AppKit is used where macOS-nat
 - Carbon `RegisterEventHotKey` for a reliable global hotkey
 - Borderless `NSWindow` overlays for region selection
 - Floating `NSPanel` toasts for success and error feedback
+
+## Updates
+
+Clipforge includes a built-in `Check for Updates…` action powered by Sparkle.
+
+Release builds look for updates at:
+
+`https://mixutin.github.io/clipforge/appcast.xml`
 
 ## Info.plist And Entitlements
 

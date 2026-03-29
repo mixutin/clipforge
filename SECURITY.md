@@ -27,6 +27,7 @@ When reporting a vulnerability, include:
 ## Security Notes
 
 - The macOS app stores the API token in the user's macOS Keychain
+- The macOS app verifies GitHub-hosted update metadata using Sparkle's Ed25519 public key
 - The server uses bearer-token auth and local-disk storage for MVP use
 - The server validates extension, MIME type, file size, and image signature before saving uploads
 - Browser CORS is disabled by default unless explicitly configured

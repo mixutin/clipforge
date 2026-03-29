@@ -1,0 +1,68 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version to release, for example 0.2.0"
+        required: true
+        type: string
+      build_number:
+        description: "Optional CFBundleVersion override. Leave blank to auto-increment."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare Versioned Release Commit
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Ensure tag does not already exist
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists." >&2
+            exit 1
+          fi
+
+      - name: Update project version
+        env:
+          VERSION: ${{ inputs.version }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          if [ -n "$BUILD_NUMBER" ]; then
+            scripts/set_clipforge_version.sh "$VERSION" "$BUILD_NUMBER"
+          else
+            scripts/set_clipforge_version.sh "$VERSION"
+          fi
+
+      - name: Commit release version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git add Clipforge/project.yml Clipforge/Clipforge.xcodeproj/project.pbxproj
+          if git diff --cached --quiet; then
+            echo "No version changes were staged." >&2
+            exit 1
+          fi
+          git commit -m "Release $VERSION"
+          git tag "v$VERSION"
+          git push origin main --follow-tags

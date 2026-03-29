@@ -21,6 +21,7 @@ The macOS app is a lightweight menu bar utility.
 - `AppKit` for `NSStatusItem`, `NSPopover`, overlay windows, and floating toast panels
 - `Carbon` for a reliable global hotkey implementation
 - `ScreenCaptureKit` for modern macOS-native screenshot capture
+- `Sparkle` for GitHub-backed in-app updates
 - `UserDefaults` and JSON files for local-first persistence
 
 ## 2. Clipforge Server
@@ -68,3 +69,7 @@ The server returns:
 - self-hosting simplicity over infrastructure sprawl
 - local-first configuration over accounts and dashboards
 - modular code over premature complexity
+
+## Release Distribution
+
+GitHub Actions produces tagged release builds for the macOS app, packages them as `.dmg` installers, publishes them on GitHub Releases, and generates a Sparkle appcast feed on GitHub Pages.
