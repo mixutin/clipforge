@@ -40,7 +40,7 @@ jobs:
         run: brew install xcodegen
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Ensure Sparkle signing key is configured
         env:
