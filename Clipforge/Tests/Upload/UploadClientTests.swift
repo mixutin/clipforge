@@ -55,6 +55,31 @@ final class UploadClientTests: XCTestCase {
         }
     }
 
+    func testUploadReportsProgressWhenHandlerProvided() async throws {
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 201,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let data = Data(#"{"url":"https://example.com/uploads/test.png"}"#.utf8)
+            return (response, data)
+        }
+
+        let recorder = ProgressRecorder()
+        let client = UploadClient(session: makeSession())
+
+        _ = try await client.upload(asset: sampleAsset(), settings: sampleSettings()) { progress in
+            recorder.append(progress)
+        }
+
+        let progressValues = recorder.values
+        XCTAssertFalse(progressValues.isEmpty)
+        XCTAssertEqual(progressValues.first ?? -1, 0, accuracy: 0.0001)
+        XCTAssertEqual(progressValues.last ?? -1, 1, accuracy: 0.0001)
+    }
+
     private func makeSession() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
@@ -114,4 +139,21 @@ private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+}
+
+private final class ProgressRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var recordedValues: [Double] = []
+
+    var values: [Double] {
+        lock.lock()
+        defer { lock.unlock() }
+        return recordedValues
+    }
+
+    func append(_ value: Double) {
+        lock.lock()
+        recordedValues.append(value)
+        lock.unlock()
+    }
 }

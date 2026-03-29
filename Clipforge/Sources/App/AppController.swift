@@ -46,6 +46,7 @@ final class AppController: ObservableObject {
     @Published private(set) var recentUploads: [UploadRecord]
     @Published private(set) var isBusy = false
     @Published private(set) var statusMessage = ""
+    @Published private(set) var uploadProgress: Double?
 
     let settingsStore = SettingsStore.shared
     private let historyStore = HistoryStore.shared
@@ -90,6 +91,11 @@ final class AppController: ObservableObject {
 
     var canUploadClipboardImage: Bool {
         settingsStore.hasReadyUploadConfiguration
+    }
+
+    var uploadProgressPercentText: String? {
+        guard let uploadProgress else { return nil }
+        return "\(Int((uploadProgress * 100).rounded()))%"
     }
 
     func configure() {
@@ -172,7 +178,7 @@ final class AppController: ObservableObject {
     }
 
     private func runCaptureArea(source: ActionSource) async {
-        guard await beginWork(status: "Selecting area…", source: source) else { return }
+        guard await beginWork(status: "Selecting area…", source: source, closesPopover: true) else { return }
         defer { endWork() }
 
         do {
@@ -192,7 +198,7 @@ final class AppController: ObservableObject {
     }
 
     private func runCaptureFullScreen(source: ActionSource) async {
-        guard await beginWork(status: "Capturing display…", source: source) else { return }
+        guard await beginWork(status: "Capturing display…", source: source, closesPopover: true) else { return }
         defer { endWork() }
 
         do {
@@ -208,7 +214,7 @@ final class AppController: ObservableObject {
     }
 
     private func runCaptureActiveWindow(source: ActionSource) async {
-        guard await beginWork(status: "Capturing active window…", source: source) else { return }
+        guard await beginWork(status: "Capturing active window…", source: source, closesPopover: true) else { return }
         defer { endWork() }
 
         do {
@@ -224,7 +230,7 @@ final class AppController: ObservableObject {
     }
 
     private func runClipboardUpload(source: ActionSource) async {
-        guard await beginWork(status: "Preparing clipboard image…", source: source) else { return }
+        guard await beginWork(status: "Preparing clipboard image…", source: source, closesPopover: false) else { return }
         defer { endWork() }
 
         do {
@@ -238,7 +244,7 @@ final class AppController: ObservableObject {
     }
 
     private func runDroppedUpload(providers: [NSItemProvider], source: ActionSource) async {
-        guard await beginWork(status: "Preparing dropped image…", source: source) else { return }
+        guard await beginWork(status: "Preparing dropped image…", source: source, closesPopover: false) else { return }
         defer { endWork() }
 
         do {
@@ -252,13 +258,14 @@ final class AppController: ObservableObject {
         }
     }
 
-    private func beginWork(status: String, source: ActionSource) async -> Bool {
+    private func beginWork(status: String, source: ActionSource, closesPopover: Bool) async -> Bool {
         guard isBusy == false else { return false }
 
         isBusy = true
         statusMessage = status
+        uploadProgress = nil
 
-        if source == .menuBar {
+        if source == .menuBar && closesPopover {
             menuBarController?.closePopover()
             try? await Task.sleep(for: .milliseconds(150))
         }
@@ -363,16 +370,26 @@ final class AppController: ObservableObject {
         settings: AppSettings,
         isManualRetry: Bool
     ) async throws -> URL {
+        uploadProgress = nil
+
         for attempt in 1...Self.maxUploadAttempts {
             statusMessage = uploadStatusMessage(forAttempt: attempt, isManualRetry: isManualRetry)
 
             do {
-                return try await uploadClient.upload(asset: asset, settings: settings)
+                let uploadedURL = try await uploadClient.upload(
+                    asset: asset,
+                    settings: settings
+                ) { [weak self] fractionCompleted in
+                    self?.uploadProgress = fractionCompleted
+                }
+                uploadProgress = 1
+                return uploadedURL
             } catch let error as ClipforgeError {
                 guard error.isRetryableUploadFailure, attempt < Self.maxUploadAttempts else {
                     throw error
                 }
 
+                uploadProgress = nil
                 logger.warning("Temporary upload failure on attempt \(attempt): \(error.localizedDescription)")
                 try? await Task.sleep(for: retryDelay(afterAttempt: attempt))
             } catch {
@@ -540,6 +557,7 @@ final class AppController: ObservableObject {
     private func endWork() {
         isBusy = false
         statusMessage = ""
+        uploadProgress = nil
     }
 
     private func present(error: Error, title: String) {

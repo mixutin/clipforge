@@ -48,8 +48,7 @@ struct MenuBarView: View {
             }
 
             if appController.isBusy {
-                ProgressView(appController.statusMessage)
-                    .controlSize(.small)
+                progressStatus
             }
 
             dropZone
@@ -193,9 +192,35 @@ struct MenuBarView: View {
         .animation(.easeInOut(duration: 0.16), value: isDropTargeted)
     }
 
+    @ViewBuilder
+    private var progressStatus: some View {
+        if let uploadProgress = appController.uploadProgress {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(appController.statusMessage)
+                        .font(.system(size: 12, weight: .medium))
+
+                    Spacer(minLength: 0)
+
+                    if let uploadProgressPercentText = appController.uploadProgressPercentText {
+                        Text(uploadProgressPercentText)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                ProgressView(value: uploadProgress, total: 1)
+                    .controlSize(.small)
+            }
+        } else {
+            ProgressView(appController.statusMessage)
+                .controlSize(.small)
+        }
+    }
+
     private var dropZoneSubtitle: String {
         if settings.hasReadyUploadConfiguration {
-            return "Finder image files and dragged images upload through your configured Clipforge Server."
+            return "Finder image files and dragged images upload through your configured Clipforge Server, with live upload progress."
         }
 
         return "Set up a server in Settings first. Dropping now will guide you there."

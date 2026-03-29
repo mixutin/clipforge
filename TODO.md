@@ -16,6 +16,7 @@ The list is intentionally opinionated:
 - [x] Add basic automated tests around filename generation, history persistence, and upload response decoding
 - [x] Add a post-upload action picker: copy link, open link, reveal local file, or do nothing
 - [x] Add copy formats beyond URL, such as Markdown image link and HTML image tag
+- [x] Add upload progress UI for larger files
 - [x] Add clipboard-only capture mode with automatic fallback when no server is configured
 - [x] Move the macOS app API token from `UserDefaults` into Keychain
 - [x] Add a proper hotkey recorder UI so the global shortcut is configurable
@@ -33,7 +34,6 @@ The list is intentionally opinionated:
 
 - [ ] Add image annotation tools before upload
 - [ ] Add clipboard image polling or a paste action for faster non-screenshot uploads
-- [ ] Add upload progress UI for larger files
 - [ ] Add optional JPEG/PNG compression settings in the app
 - [ ] Add richer filename templates with placeholders like date, time, display name, and random suffix
 - [ ] Add a searchable upload history view outside the compact menu bar list
