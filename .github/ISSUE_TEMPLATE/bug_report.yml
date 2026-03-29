@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible bug in Clipforge or Clipforge Server
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Clipforge macOS app
+        - Clipforge Server
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the bug and the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Clipforge
+        2. Trigger Capture Area
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include macOS version, Xcode version, Python version, deployment setup, or server details.
+    validations:
+      required: false

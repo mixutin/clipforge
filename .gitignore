@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.py[cod]
+**/.DS_Store
+**/DerivedData/
+**/xcuserdata/
+Clipforge/Clipforge.xcodeproj/project.xcworkspace/xcuserdata/
+ClipforgeServer/uploads/*
+!ClipforgeServer/uploads/.gitkeep
