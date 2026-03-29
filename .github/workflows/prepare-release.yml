@@ -13,6 +13,7 @@ on:
         type: string
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -57,6 +58,7 @@ jobs:
       - name: Commit release version
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add Clipforge/project.yml Clipforge/Clipforge.xcodeproj/project.pbxproj
           if git diff --cached --quiet; then
@@ -67,3 +69,4 @@ jobs:
           git tag -a "v$VERSION" -m "Release $VERSION"
           git push origin main
           git push origin "v$VERSION"
+          gh workflow run release.yml -f tag="v$VERSION"

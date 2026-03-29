@@ -29,9 +29,9 @@ The matching public key is already embedded in the app's `Info.plist`.
 3. Optionally provide a build number, or leave it blank to auto-increment
 4. Run the workflow
 
-That workflow updates `Clipforge/project.yml`, regenerates the Xcode project, commits the version bump, creates a `vX.Y.Z` tag, and pushes both to `main`.
+That workflow updates `Clipforge/project.yml`, regenerates the Xcode project, commits the version bump, creates a `vX.Y.Z` tag, pushes both to `main`, and dispatches the `Release` workflow for that tag.
 
-The `Release` workflow then runs automatically on the new tag and publishes:
+The `Release` workflow then publishes:
 
 - a versioned GitHub Release
 - a `.dmg` installer
