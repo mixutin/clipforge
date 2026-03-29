@@ -64,5 +64,6 @@ jobs:
             exit 1
           fi
           git commit -m "Release $VERSION"
-          git tag "v$VERSION"
-          git push origin main --follow-tags
+          git tag -a "v$VERSION" -m "Release $VERSION"
+          git push origin main
+          git push origin "v$VERSION"
