@@ -12,6 +12,7 @@ The list is intentionally opinionated:
 
 ## Recently Completed
 
+- [x] Add a searchable upload history view outside the compact menu bar list
 - [x] Add richer filename templates with placeholders like date, time, display name, and random suffix
 - [x] Add optional JPEG/PNG compression settings in the app
 - [x] Add clipboard image polling or a paste action for faster non-screenshot uploads
@@ -36,7 +37,6 @@ The list is intentionally opinionated:
 
 ## Next
 
-- [ ] Add a searchable upload history view outside the compact menu bar list
 - [ ] Add a server endpoint for deleting uploads with token auth
 - [ ] Add support for multiple server profiles in the app
 

@@ -32,6 +32,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Configurable image format output with PNG, JPEG, and JPEG quality controls
 - Richer filename styles with template placeholders for date, time, display name, source name, and random suffix
 - Local recent upload history
+- Searchable upload history window outside the compact menu bar popover
 - Thumbnail previews in recent uploads
 - Local-first settings
 - Sparkle-powered in-app update checks

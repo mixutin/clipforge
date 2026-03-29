@@ -59,8 +59,10 @@ struct MenuBarView: View {
 
             RecentUploadsList(
                 items: appController.recentUploads,
+                previewLimit: 5,
                 onCopy: appController.copyUploadContent,
-                onOpen: appController.openUpload
+                onOpen: appController.openUpload,
+                onShowHistory: appController.openUploadHistory
             )
 
             Divider()

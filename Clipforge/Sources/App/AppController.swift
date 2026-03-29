@@ -60,6 +60,7 @@ final class AppController: ObservableObject {
 
     weak var menuBarController: MenuBarController?
     weak var permissionOnboardingController: PermissionOnboardingController?
+    weak var uploadHistoryController: UploadHistoryController?
 
     private init() {
         recentUploads = historyStore.load()
@@ -160,6 +161,11 @@ final class AppController: ObservableObject {
     func openPermissionGuide() {
         menuBarController?.closePopover()
         permissionOnboardingController?.show()
+    }
+
+    func openUploadHistory() {
+        menuBarController?.closePopover()
+        uploadHistoryController?.show()
     }
 
     func copyUploadContent(_ record: UploadRecord) {

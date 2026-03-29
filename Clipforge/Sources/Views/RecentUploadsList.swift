@@ -3,8 +3,14 @@ import AppKit
 
 struct RecentUploadsList: View {
     let items: [UploadRecord]
+    let previewLimit: Int
     let onCopy: (UploadRecord) -> Void
     let onOpen: (UploadRecord) -> Void
+    let onShowHistory: () -> Void
+
+    private var displayItems: [UploadRecord] {
+        Array(items.prefix(previewLimit))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -13,6 +19,12 @@ struct RecentUploadsList: View {
                     .font(.system(size: 13, weight: .semibold))
 
                 Spacer()
+
+                Button("View All") {
+                    onShowHistory()
+                }
+                .buttonStyle(.link)
+                .font(.system(size: 11))
 
                 Text("\(items.count)")
                     .font(.system(size: 11))
@@ -27,7 +39,7 @@ struct RecentUploadsList: View {
             } else {
                 ScrollView {
                     VStack(spacing: 8) {
-                        ForEach(items) { item in
+                        ForEach(displayItems) { item in
                             HStack(alignment: .top, spacing: 10) {
                                 UploadThumbnailView(data: item.thumbnailPNGData)
 
@@ -71,6 +83,12 @@ struct RecentUploadsList: View {
                     }
                 }
                 .frame(maxHeight: 170)
+
+                if items.count > displayItems.count {
+                    Text("Showing the latest \(displayItems.count) uploads here. Open Upload History to search everything saved locally.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

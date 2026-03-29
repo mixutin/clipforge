@@ -11,7 +11,7 @@ final class HistoryStore {
     init(
         fileManager: FileManager = .default,
         baseDirectory: URL? = nil,
-        maxItems: Int = 15
+        maxItems: Int = 200
     ) {
         self.fileManager = fileManager
         self.baseDirectory = baseDirectory ?? Self.defaultBaseDirectory(fileManager: fileManager)
