@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct RecentUploadsList: View {
     let items: [UploadRecord]
@@ -28,6 +29,8 @@ struct RecentUploadsList: View {
                     VStack(spacing: 8) {
                         ForEach(items) { item in
                             HStack(alignment: .top, spacing: 10) {
+                                UploadThumbnailView(data: item.thumbnailPNGData)
+
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.localFilename)
                                         .font(.system(size: 12, weight: .medium))
@@ -70,5 +73,33 @@ struct RecentUploadsList: View {
                 .frame(maxHeight: 170)
             }
         }
+    }
+}
+
+private struct UploadThumbnailView: View {
+    let data: Data?
+
+    var body: some View {
+        Group {
+            if let data, let image = NSImage(data: data) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.primary.opacity(0.07))
+
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(width: 52, height: 52)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+        )
     }
 }

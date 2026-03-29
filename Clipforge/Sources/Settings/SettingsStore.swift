@@ -7,7 +7,7 @@ final class SettingsStore: ObservableObject {
 
     private enum Keys {
         static let serverURL = "settings.serverURL"
-        static let apiToken = "settings.apiToken"
+        static let legacyAPIToken = "settings.apiToken"
         static let autoCopy = "settings.autoCopy"
         static let saveLocal = "settings.saveLocal"
         static let localFolder = "settings.localFolder"
@@ -17,11 +17,13 @@ final class SettingsStore: ObservableObject {
     }
 
     private let defaults = UserDefaults.standard
+    private var apiTokenCache: String
 
     private init() {
+        apiTokenCache = ""
+
         defaults.register(defaults: [
             Keys.serverURL: AppSettings.default.serverURL,
-            Keys.apiToken: AppSettings.default.apiToken,
             Keys.autoCopy: AppSettings.default.autoCopyLinkEnabled,
             Keys.saveLocal: AppSettings.default.saveLocalScreenshotEnabled,
             Keys.localFolder: AppSettings.default.localSaveFolder,
@@ -29,6 +31,9 @@ final class SettingsStore: ObservableObject {
             Keys.hotkeyKeyCode: HotkeyDescriptor.default.keyCode,
             Keys.hotkeyModifiers: HotkeyDescriptor.default.modifiers
         ])
+
+        migrateLegacyAPITokenIfNeeded()
+        apiTokenCache = KeychainService.loadToken()
     }
 
     var serverURL: String {
@@ -40,9 +45,17 @@ final class SettingsStore: ObservableObject {
     }
 
     var apiToken: String {
-        get { defaults.string(forKey: Keys.apiToken) ?? "" }
+        get { apiTokenCache }
         set {
-            defaults.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: Keys.apiToken)
+            let trimmedValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            apiTokenCache = trimmedValue
+
+            if trimmedValue.isEmpty {
+                _ = KeychainService.deleteToken()
+            } else {
+                _ = KeychainService.saveToken(trimmedValue)
+            }
+
             objectWillChange.send()
         }
     }
@@ -92,6 +105,7 @@ final class SettingsStore: ObservableObject {
         set {
             defaults.set(Int(newValue.keyCode), forKey: Keys.hotkeyKeyCode)
             defaults.set(Int(newValue.modifiers), forKey: Keys.hotkeyModifiers)
+            NotificationCenter.default.post(name: .clipforgeHotkeyDidChange, object: nil)
             objectWillChange.send()
         }
     }
@@ -131,4 +145,26 @@ final class SettingsStore: ObservableObject {
     func resetLocalFolderToDefault() {
         localSaveFolder = AppSettings.defaultLocalSaveFolder
     }
+
+    private func migrateLegacyAPITokenIfNeeded() {
+        let existingKeychainToken = KeychainService.loadToken()
+        guard existingKeychainToken.isEmpty else {
+            defaults.removeObject(forKey: Keys.legacyAPIToken)
+            return
+        }
+
+        guard let legacyToken = defaults.string(forKey: Keys.legacyAPIToken)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              legacyToken.isEmpty == false
+        else {
+            defaults.removeObject(forKey: Keys.legacyAPIToken)
+            return
+        }
+
+        _ = KeychainService.saveToken(legacyToken)
+        defaults.removeObject(forKey: Keys.legacyAPIToken)
+    }
+}
+
+extension Notification.Name {
+    static let clipforgeHotkeyDidChange = Notification.Name("clipforge.hotkeyDidChange")
 }

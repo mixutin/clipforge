@@ -22,6 +22,7 @@ final class AppController: ObservableObject {
     private let clipboardService = ClipboardService.shared
     private let toastPresenter = ToastPresenter.shared
     private let logger = Logger(subsystem: "com.clipforge.app", category: "App")
+    private var hotkeyObserver: NSObjectProtocol?
 
     weak var menuBarController: MenuBarController?
 
@@ -41,6 +42,26 @@ final class AppController: ObservableObject {
     }
 
     func configure() {
+        registerHotkey()
+
+        hotkeyObserver = NotificationCenter.default.addObserver(
+            forName: .clipforgeHotkeyDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.registerHotkey()
+            }
+        }
+    }
+
+    func captureActiveWindow(source: ActionSource = .menuBar) {
+        Task {
+            await runCaptureActiveWindow(source: source)
+        }
+    }
+
+    private func registerHotkey() {
         HotkeyService.shared.register(settingsStore.hotkey) { [weak self] in
             Task { @MainActor in
                 self?.captureArea(source: .hotkey)
@@ -118,6 +139,22 @@ final class AppController: ObservableObject {
         }
     }
 
+    private func runCaptureActiveWindow(source: ActionSource) async {
+        guard await beginWork(status: "Capturing active window…", source: source) else { return }
+        defer { endWork() }
+
+        do {
+            let cgImage = try await captureService.captureActiveWindow()
+            let asset = try CapturedAsset.from(
+                cgImage: cgImage,
+                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+            )
+            try await upload(asset: asset)
+        } catch {
+            present(error: error, title: "Capture failed")
+        }
+    }
+
     private func runClipboardUpload(source: ActionSource) async {
         guard await beginWork(status: "Preparing clipboard image…", source: source) else { return }
         defer { endWork() }
@@ -160,6 +197,7 @@ final class AppController: ObservableObject {
         let record = UploadRecord(
             localFilename: asset.filename,
             remoteURL: remoteURL.absoluteString,
+            thumbnailPNGData: ThumbnailGenerator.makePNGData(from: asset.data),
             createdAt: Date()
         )
         recentUploads = historyStore.add(record)

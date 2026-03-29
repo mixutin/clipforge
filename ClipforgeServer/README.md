@@ -14,6 +14,7 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 - `CLIPFORGE_UPLOAD_DIR`: local upload directory
 - `CLIPFORGE_API_TOKEN`: bearer token required for uploads
 - `CLIPFORGE_MAX_UPLOAD_MB`: max upload size in megabytes
+- `CLIPFORGE_CORS_ALLOW_ORIGINS`: optional comma-separated browser origins allowed for CORS
 
 ## Run Locally
 
@@ -47,5 +48,5 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 
 - Uploads are stored on local disk in `uploads/`
 - Files are served statically from `/uploads`
+- CORS is disabled by default unless `CLIPFORGE_CORS_ALLOW_ORIGINS` is set
 - The built-in rate limiter is an in-memory MVP implementation and is the right place to replace with Redis or a reverse-proxy limit later
-- CORS is intentionally open for MVP expansion; tighten it before exposing the service broadly

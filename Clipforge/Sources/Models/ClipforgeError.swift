@@ -5,6 +5,7 @@ enum ClipforgeError: LocalizedError, Sendable {
     case missingAPIToken
     case screenCapturePermissionDenied
     case selectionCancelled
+    case activeWindowUnavailable
     case clipboardDoesNotContainImage
     case uploadUnauthorized
     case uploadTooLarge
@@ -26,6 +27,8 @@ enum ClipforgeError: LocalizedError, Sendable {
             return "Clipforge needs Screen Recording permission before it can capture screenshots."
         case .selectionCancelled:
             return "Capture cancelled."
+        case .activeWindowUnavailable:
+            return "Clipforge could not find a capturable active window."
         case .clipboardDoesNotContainImage:
             return "The clipboard does not currently contain an image."
         case .uploadUnauthorized:

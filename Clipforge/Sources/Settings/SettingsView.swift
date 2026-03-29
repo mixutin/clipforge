@@ -14,7 +14,7 @@ struct SettingsView: View {
                 SecureField("Bearer token", text: settings.binding(for: \.apiToken))
                     .textFieldStyle(.roundedBorder)
 
-                Text("Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development.")
+                Text("Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development. The API token is now stored in your macOS Keychain.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -29,16 +29,10 @@ struct SettingsView: View {
                     }
                 }
 
-                HStack {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Global hotkey")
-                    Spacer()
-                    Text(settings.hotkey.displayString)
-                        .foregroundStyle(.secondary)
+                    HotkeyRecorderView(hotkey: settings.binding(for: \.hotkey))
                 }
-
-                Text("Hotkey registration is already isolated in the codebase, so a customizable shortcut UI can be added later without reworking capture logic.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
             }
 
             Section("Local Storage") {
