@@ -1,9 +1,11 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct MenuBarView: View {
     @EnvironmentObject private var appController: AppController
     @EnvironmentObject private var updaterController: UpdaterController
     @ObservedObject private var settings = SettingsStore.shared
+    @State private var isDropTargeted = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -50,11 +52,13 @@ struct MenuBarView: View {
                     .controlSize(.small)
             }
 
+            dropZone
+
             Divider()
 
             RecentUploadsList(
                 items: appController.recentUploads,
-                onCopy: appController.copyUploadLink,
+                onCopy: appController.copyUploadContent,
                 onOpen: appController.openUpload
             )
 
@@ -80,6 +84,14 @@ struct MenuBarView: View {
         .padding(16)
         .frame(width: 380)
         .background(.regularMaterial)
+        .onDrop(of: dropTypeIdentifiers, isTargeted: $isDropTargeted) { providers in
+            guard appController.isBusy == false else {
+                return false
+            }
+
+            appController.uploadDroppedItems(providers)
+            return true
+        }
     }
 
     private var header: some View {
@@ -143,6 +155,73 @@ struct MenuBarView: View {
                 ? "Capture the frontmost app window and upload it"
                 : "Capture the frontmost app window and copy it to the clipboard"
         }
+    }
+
+    private var dropZone: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: isDropTargeted ? "tray.and.arrow.down.fill" : "square.and.arrow.up.on.square")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(dropZoneAccentColor)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(isDropTargeted ? "Release to upload your image" : "Drop an image here to upload")
+                        .font(.system(size: 13, weight: .semibold))
+
+                    Text(dropZoneSubtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(dropZoneBackgroundColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(
+                            dropZoneAccentColor.opacity(isDropTargeted ? 0.55 : 0.22),
+                            style: StrokeStyle(lineWidth: 1.2, dash: [6, 5])
+                        )
+                )
+        )
+        .opacity(appController.isBusy ? 0.6 : 1)
+        .animation(.easeInOut(duration: 0.16), value: isDropTargeted)
+    }
+
+    private var dropZoneSubtitle: String {
+        if settings.hasReadyUploadConfiguration {
+            return "Finder image files and dragged images upload through your configured Clipforge Server."
+        }
+
+        return "Set up a server in Settings first. Dropping now will guide you there."
+    }
+
+    private var dropZoneAccentColor: Color {
+        if settings.hasReadyUploadConfiguration {
+            return isDropTargeted ? .accentColor : .secondary
+        }
+
+        return isDropTargeted ? .orange : .secondary
+    }
+
+    private var dropZoneBackgroundColor: Color {
+        if isDropTargeted {
+            return Color.accentColor.opacity(0.12)
+        }
+
+        return Color.primary.opacity(0.04)
+    }
+
+    private var dropTypeIdentifiers: [String] {
+        [
+            UTType.fileURL.identifier,
+            UTType.image.identifier
+        ]
     }
 
     @ViewBuilder

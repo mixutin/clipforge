@@ -47,6 +47,176 @@ struct AppSettings: Sendable {
         }
     }
 
+    enum UploadCopyFormat: String, CaseIterable, Codable, Identifiable {
+        case url
+        case markdownImage
+        case htmlImageTag
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .url:
+                return "URL"
+            case .markdownImage:
+                return "Markdown Image"
+            case .htmlImageTag:
+                return "HTML Image Tag"
+            }
+        }
+
+        var helpText: String {
+            switch self {
+            case .url:
+                return "Copy the plain uploaded URL."
+            case .markdownImage:
+                return "Copy a Markdown image snippet like `![Alt](<url>)`."
+            case .htmlImageTag:
+                return "Copy an HTML image tag like `<img src=\"...\" alt=\"...\" />`."
+            }
+        }
+
+        var copyToastTitle: String {
+            switch self {
+            case .url:
+                return "Link copied"
+            case .markdownImage:
+                return "Markdown image copied"
+            case .htmlImageTag:
+                return "HTML image copied"
+            }
+        }
+
+        var copyActionTitle: String {
+            switch self {
+            case .url:
+                return "Copy Link"
+            case .markdownImage:
+                return "Copy Markdown"
+            case .htmlImageTag:
+                return "Copy HTML"
+            }
+        }
+
+        var quickActionTitle: String {
+            switch self {
+            case .url:
+                return "Copy Link"
+            case .markdownImage:
+                return "Copy Markdown"
+            case .htmlImageTag:
+                return "Copy HTML"
+            }
+        }
+
+        var contentDescription: String {
+            switch self {
+            case .url:
+                return "uploaded URL"
+            case .markdownImage:
+                return "Markdown image link"
+            case .htmlImageTag:
+                return "HTML image tag"
+            }
+        }
+
+        var copiedToClipboardMessage: String {
+            switch self {
+            case .url:
+                return "Link copied to your clipboard."
+            case .markdownImage:
+                return "Markdown image link copied to your clipboard."
+            case .htmlImageTag:
+                return "HTML image tag copied to your clipboard."
+            }
+        }
+
+        var copiedAndRevealedMessage: String {
+            switch self {
+            case .url:
+                return "Link copied and local file revealed in Finder."
+            case .markdownImage:
+                return "Markdown image link copied and local file revealed in Finder."
+            case .htmlImageTag:
+                return "HTML image tag copied and local file revealed in Finder."
+            }
+        }
+
+        func formattedString(remoteURL: String, localFilename: String) -> String {
+            let altText = Self.altText(from: localFilename)
+
+            switch self {
+            case .url:
+                return remoteURL
+            case .markdownImage:
+                let escapedAltText = Self.escapeMarkdownAltText(altText)
+                return "![\(escapedAltText)](<\(remoteURL)>)"
+            case .htmlImageTag:
+                let escapedURL = Self.escapeHTMLAttribute(remoteURL)
+                let escapedAltText = Self.escapeHTMLAttribute(altText)
+                return "<img src=\"\(escapedURL)\" alt=\"\(escapedAltText)\" />"
+            }
+        }
+
+        private static func altText(from localFilename: String) -> String {
+            let basename = (localFilename as NSString).deletingPathExtension
+            return basename.isEmpty ? "Clipforge image" : basename
+        }
+
+        private static func escapeMarkdownAltText(_ value: String) -> String {
+            var escaped = value.replacingOccurrences(of: "\\", with: "\\\\")
+
+            for character in ["[", "]", "(", ")"] {
+                escaped = escaped.replacingOccurrences(of: character, with: "\\\(character)")
+            }
+
+            return escaped
+        }
+
+        private static func escapeHTMLAttribute(_ value: String) -> String {
+            value
+                .replacingOccurrences(of: "&", with: "&amp;")
+                .replacingOccurrences(of: "\"", with: "&quot;")
+                .replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;")
+        }
+    }
+
+    enum PostUploadAction: String, CaseIterable, Codable, Identifiable {
+        case copyLink
+        case openLink
+        case revealLocalFile
+        case doNothing
+
+        var id: Self { self }
+
+        func title(for copyFormat: UploadCopyFormat) -> String {
+            switch self {
+            case .copyLink:
+                return copyFormat.quickActionTitle
+            case .openLink:
+                return "Open Link"
+            case .revealLocalFile:
+                return "Reveal Local File"
+            case .doNothing:
+                return "Do Nothing"
+            }
+        }
+
+        func helpText(for copyFormat: UploadCopyFormat) -> String {
+            switch self {
+            case .copyLink:
+                return "Show a quick action in the success popup to copy the \(copyFormat.contentDescription)."
+            case .openLink:
+                return "Show a quick action in the success popup to open the uploaded URL."
+            case .revealLocalFile:
+                return "Show a quick action in the success popup to reveal the saved local file in Finder."
+            case .doNothing:
+                return "Do not show a quick action in the success popup after upload."
+            }
+        }
+    }
+
     var serverURL: String
     var apiToken: String
     var autoCopyLinkEnabled: Bool
@@ -55,6 +225,8 @@ struct AppSettings: Sendable {
     var localSaveFolder: String
     var captureDestinationMode: CaptureDestinationMode
     var filenameMode: FilenameMode
+    var uploadCopyFormat: UploadCopyFormat
+    var postUploadAction: PostUploadAction
 
     static var defaultLocalSaveFolder: String {
         let pictures = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
@@ -71,6 +243,8 @@ struct AppSettings: Sendable {
         revealSavedFileAfterUploadEnabled: false,
         localSaveFolder: AppSettings.defaultLocalSaveFolder,
         captureDestinationMode: .automatic,
-        filenameMode: .randomHex
+        filenameMode: .randomHex,
+        uploadCopyFormat: .url,
+        postUploadAction: .openLink
     )
 }

@@ -11,9 +11,12 @@ final class SettingsStore: ObservableObject {
         static let autoCopy = "settings.autoCopy"
         static let saveLocal = "settings.saveLocal"
         static let revealSavedFileAfterUpload = "settings.revealSavedFileAfterUpload"
+        static let hasPresentedPermissionGuide = "settings.hasPresentedPermissionGuide"
         static let localFolder = "settings.localFolder"
         static let captureDestinationMode = "settings.captureDestinationMode"
         static let filenameMode = "settings.filenameMode"
+        static let uploadCopyFormat = "settings.uploadCopyFormat"
+        static let postUploadAction = "settings.postUploadAction"
         static let hotkeyKeyCode = "settings.hotkey.keyCode"
         static let hotkeyModifiers = "settings.hotkey.modifiers"
     }
@@ -32,6 +35,8 @@ final class SettingsStore: ObservableObject {
             Keys.localFolder: AppSettings.default.localSaveFolder,
             Keys.captureDestinationMode: AppSettings.default.captureDestinationMode.rawValue,
             Keys.filenameMode: AppSettings.default.filenameMode.rawValue,
+            Keys.uploadCopyFormat: AppSettings.default.uploadCopyFormat.rawValue,
+            Keys.postUploadAction: AppSettings.default.postUploadAction.rawValue,
             Keys.hotkeyKeyCode: HotkeyDescriptor.default.keyCode,
             Keys.hotkeyModifiers: HotkeyDescriptor.default.modifiers
         ])
@@ -118,6 +123,28 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    var uploadCopyFormat: AppSettings.UploadCopyFormat {
+        get {
+            let rawValue = defaults.string(forKey: Keys.uploadCopyFormat) ?? AppSettings.default.uploadCopyFormat.rawValue
+            return AppSettings.UploadCopyFormat(rawValue: rawValue) ?? .url
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.uploadCopyFormat)
+            objectWillChange.send()
+        }
+    }
+
+    var postUploadAction: AppSettings.PostUploadAction {
+        get {
+            let rawValue = defaults.string(forKey: Keys.postUploadAction) ?? AppSettings.default.postUploadAction.rawValue
+            return AppSettings.PostUploadAction(rawValue: rawValue) ?? .openLink
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.postUploadAction)
+            objectWillChange.send()
+        }
+    }
+
     var hotkey: HotkeyDescriptor {
         get {
             HotkeyDescriptor(
@@ -142,7 +169,9 @@ final class SettingsStore: ObservableObject {
             revealSavedFileAfterUploadEnabled: revealSavedFileAfterUploadEnabled,
             localSaveFolder: localSaveFolder,
             captureDestinationMode: captureDestinationMode,
-            filenameMode: filenameMode
+            filenameMode: filenameMode,
+            uploadCopyFormat: uploadCopyFormat,
+            postUploadAction: postUploadAction
         )
     }
 
@@ -178,6 +207,14 @@ final class SettingsStore: ObservableObject {
 
     func resetLocalFolderToDefault() {
         localSaveFolder = AppSettings.defaultLocalSaveFolder
+    }
+
+    var shouldPresentPermissionGuideOnLaunch: Bool {
+        defaults.bool(forKey: Keys.hasPresentedPermissionGuide) == false
+    }
+
+    func markPermissionGuidePresented() {
+        defaults.set(true, forKey: Keys.hasPresentedPermissionGuide)
     }
 
     func uploadConfigurationState() -> UploadConfigurationState {

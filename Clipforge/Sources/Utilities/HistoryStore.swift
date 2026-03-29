@@ -4,10 +4,19 @@ import Foundation
 final class HistoryStore {
     static let shared = HistoryStore()
 
-    private let fileManager = FileManager.default
-    private let maxItems = 15
+    private let fileManager: FileManager
+    private let baseDirectory: URL
+    private let maxItems: Int
 
-    private init() {}
+    init(
+        fileManager: FileManager = .default,
+        baseDirectory: URL? = nil,
+        maxItems: Int = 15
+    ) {
+        self.fileManager = fileManager
+        self.baseDirectory = baseDirectory ?? Self.defaultBaseDirectory(fileManager: fileManager)
+        self.maxItems = maxItems
+    }
 
     func load() -> [UploadRecord] {
         let fileURL = historyFileURL()
@@ -28,8 +37,7 @@ final class HistoryStore {
     }
 
     private func persist(_ items: [UploadRecord]) {
-        let directory = applicationSupportDirectory()
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -40,12 +48,12 @@ final class HistoryStore {
     }
 
     private func historyFileURL() -> URL {
-        applicationSupportDirectory().appendingPathComponent("recent-uploads.json")
+        baseDirectory.appendingPathComponent("recent-uploads.json")
     }
 
-    private func applicationSupportDirectory() -> URL {
-        let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+    private static func defaultBaseDirectory(fileManager: FileManager) -> URL {
+        let directory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSTemporaryDirectory())
-        return baseDirectory.appendingPathComponent("Clipforge", isDirectory: true)
+        return directory.appendingPathComponent("Clipforge", isDirectory: true)
     }
 }

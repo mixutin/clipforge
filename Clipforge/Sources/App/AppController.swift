@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import os
+import UniformTypeIdentifiers
 
 @MainActor
 final class AppController: ObservableObject {
@@ -35,6 +36,11 @@ final class AppController: ObservableObject {
         }
     }
 
+    private struct SuccessToastAction {
+        let title: String
+        let handler: () -> Void
+    }
+
     static let shared = AppController()
 
     @Published private(set) var recentUploads: [UploadRecord]
@@ -51,6 +57,7 @@ final class AppController: ObservableObject {
     private var hotkeyObserver: NSObjectProtocol?
 
     weak var menuBarController: MenuBarController?
+    weak var permissionOnboardingController: PermissionOnboardingController?
 
     private init() {
         recentUploads = historyStore.load()
@@ -131,15 +138,32 @@ final class AppController: ObservableObject {
         }
     }
 
+    func uploadDroppedItems(_ providers: [NSItemProvider], source: ActionSource = .menuBar) {
+        Task {
+            await runDroppedUpload(providers: providers, source: source)
+        }
+    }
+
     func openSettings() {
         menuBarController?.closePopover()
         NSApp.activate(ignoringOtherApps: true)
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
-    func copyUploadLink(_ record: UploadRecord) {
-        clipboardService.copyString(record.remoteURL)
-        toastPresenter.showSuccess(title: "Link copied", message: record.remoteURL)
+    func openPermissionGuide() {
+        menuBarController?.closePopover()
+        permissionOnboardingController?.show()
+    }
+
+    func copyUploadContent(_ record: UploadRecord) {
+        let copiedContent = formattedUploadContent(
+            remoteURLString: record.remoteURL,
+            localFilename: record.localFilename
+        )
+        let copyFormat = settingsStore.uploadCopyFormat
+
+        clipboardService.copyString(copiedContent)
+        toastPresenter.showSuccess(title: copyFormat.copyToastTitle, message: copiedContent)
     }
 
     func openUpload(_ record: UploadRecord) {
@@ -213,6 +237,21 @@ final class AppController: ObservableObject {
         }
     }
 
+    private func runDroppedUpload(providers: [NSItemProvider], source: ActionSource) async {
+        guard await beginWork(status: "Preparing dropped image…", source: source) else { return }
+        defer { endWork() }
+
+        do {
+            let asset = try await DroppedImageLoader.loadImageAsset(
+                from: providers,
+                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+            )
+            try await deliver(asset: asset, forceUpload: true)
+        } catch {
+            present(error: error, title: "Dropped image upload failed")
+        }
+    }
+
     private func beginWork(status: String, source: ActionSource) async -> Bool {
         guard isBusy == false else { return false }
 
@@ -265,9 +304,21 @@ final class AppController: ObservableObject {
                 isManualRetry: isManualRetry
             )
             let revealedLocalFile = revealLocalFileIfNeeded(localSaveStatus: localSaveStatus, settings: settings)
+            let successAction = successToastAction(
+                for: remoteURL,
+                localFilename: asset.filename,
+                localSaveStatus: localSaveStatus,
+                settings: settings
+            )
 
             if settings.autoCopyLinkEnabled {
-                clipboardService.copyString(remoteURL.absoluteString)
+                clipboardService.copyString(
+                    formattedUploadContent(
+                        remoteURLString: remoteURL.absoluteString,
+                        localFilename: asset.filename,
+                        copyFormat: settings.uploadCopyFormat
+                    )
+                )
             }
 
             let record = UploadRecord(
@@ -282,9 +333,9 @@ final class AppController: ObservableObject {
             if localSaveStatus.didFail {
                 message = "Uploaded successfully, but the local copy could not be saved."
             } else if settings.autoCopyLinkEnabled && revealedLocalFile {
-                message = "Uploaded successfully. Link copied and local file revealed in Finder."
+                message = "Uploaded successfully. \(settings.uploadCopyFormat.copiedAndRevealedMessage)"
             } else if settings.autoCopyLinkEnabled {
-                message = "Uploaded successfully. Link copied to your clipboard."
+                message = "Uploaded successfully. \(settings.uploadCopyFormat.copiedToClipboardMessage)"
             } else if revealedLocalFile {
                 message = "Uploaded successfully. Local file revealed in Finder."
             } else {
@@ -294,10 +345,9 @@ final class AppController: ObservableObject {
             toastPresenter.showSuccess(
                 title: "Clipforge uploaded your image",
                 message: message,
-                actionTitle: "Open"
-            ) {
-                NSWorkspace.shared.open(remoteURL)
-            }
+                actionTitle: successAction?.title,
+                action: successAction?.handler
+            )
         } catch {
             handleUploadFailure(
                 error,
@@ -377,6 +427,62 @@ final class AppController: ObservableObject {
         return true
     }
 
+    private func successToastAction(
+        for remoteURL: URL,
+        localFilename: String,
+        localSaveStatus: LocalSaveStatus,
+        settings: AppSettings
+    ) -> SuccessToastAction? {
+        switch settings.postUploadAction {
+        case .copyLink:
+            return SuccessToastAction(
+                title: settings.autoCopyLinkEnabled ? "Copy Again" : settings.uploadCopyFormat.copyActionTitle,
+                handler: { [weak self] in
+                    guard let self else { return }
+                    let copiedContent = self.formattedUploadContent(
+                        remoteURLString: remoteURL.absoluteString,
+                        localFilename: localFilename,
+                        copyFormat: settings.uploadCopyFormat
+                    )
+                    self.clipboardService.copyString(copiedContent)
+                    self.toastPresenter.showSuccess(
+                        title: settings.uploadCopyFormat.copyToastTitle,
+                        message: copiedContent
+                    )
+                }
+            )
+        case .openLink:
+            return SuccessToastAction(
+                title: "Open",
+                handler: {
+                    NSWorkspace.shared.open(remoteURL)
+                }
+            )
+        case .revealLocalFile:
+            guard let savedFileURL = localSaveStatus.savedFileURL else {
+                return nil
+            }
+
+            return SuccessToastAction(
+                title: settings.revealSavedFileAfterUploadEnabled ? "Reveal Again" : "Reveal",
+                handler: {
+                    NSWorkspace.shared.activateFileViewerSelecting([savedFileURL])
+                }
+            )
+        case .doNothing:
+            return nil
+        }
+    }
+
+    private func formattedUploadContent(
+        remoteURLString: String,
+        localFilename: String,
+        copyFormat: AppSettings.UploadCopyFormat? = nil
+    ) -> String {
+        let format = copyFormat ?? settingsStore.uploadCopyFormat
+        return format.formattedString(remoteURL: remoteURLString, localFilename: localFilename)
+    }
+
     private func handleUploadFailure(
         _ error: Error,
         asset: CapturedAsset,
@@ -446,9 +552,9 @@ final class AppController: ObservableObject {
             toastPresenter.showError(
                 title: title,
                 message: clipforgeError.localizedDescription,
-                actionTitle: "Open Settings"
+                actionTitle: "Open Guide"
             ) {
-                PermissionManager.openScreenCaptureSettings()
+                self.openPermissionGuide()
             }
         case .invalidServerURL, .missingAPIToken:
             toastPresenter.showError(

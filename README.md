@@ -22,8 +22,10 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - ScreenCaptureKit-based screenshots
 - Bearer-token authenticated multipart uploads
 - Keychain-backed API token storage
-- Automatic clipboard copy of uploaded URLs
+- Automatic clipboard copy of uploaded URLs, Markdown, or HTML image tags
+- Configurable post-upload quick actions
 - Clipboard-only capture mode when you do not want to use a server
+- Drag-and-drop image uploads from Finder or other apps
 - Local recent upload history
 - Thumbnail previews in recent uploads
 - Local-first settings
@@ -80,6 +82,7 @@ Build and run the `Clipforge` scheme, then configure:
 
 ## Documentation
 
+- [Agent Guide](./AGENTS.md)
 - [Architecture](./docs/architecture.md)
 - [Self-Hosting Guide](./docs/self-hosting.md)
 - [Project TODO](./TODO.md)

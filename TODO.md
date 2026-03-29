@@ -10,12 +10,12 @@ The list is intentionally opinionated:
 
 ## Now
 
-- [ ] Improve permission onboarding with a first-run help screen
-- [ ] Add drag-and-drop image upload support to the menu bar popover
-- [ ] Add basic automated tests around filename generation, history persistence, and upload response decoding
-
 ## Recently Completed
 
+- [x] Add drag-and-drop image upload support to the menu bar popover
+- [x] Add basic automated tests around filename generation, history persistence, and upload response decoding
+- [x] Add a post-upload action picker: copy link, open link, reveal local file, or do nothing
+- [x] Add copy formats beyond URL, such as Markdown image link and HTML image tag
 - [x] Add clipboard-only capture mode with automatic fallback when no server is configured
 - [x] Move the macOS app API token from `UserDefaults` into Keychain
 - [x] Add a proper hotkey recorder UI so the global shortcut is configurable
@@ -23,6 +23,7 @@ The list is intentionally opinionated:
 - [x] Add thumbnail previews to Recent Uploads
 - [x] Add an option to reveal the local saved file in Finder after upload
 - [x] Add retry and clearer recovery paths for temporary upload failures
+- [x] Improve permission onboarding with a first-run help screen
 - [x] Add backend tests for auth, file validation, and max-size enforcement
 - [x] Add optional Open Graph share pages for Discord-style embeds
 - [x] Tighten backend upload validation with file-signature checks
@@ -31,8 +32,6 @@ The list is intentionally opinionated:
 ## Next
 
 - [ ] Add image annotation tools before upload
-- [ ] Add copy formats beyond URL, such as Markdown image link and HTML image tag
-- [ ] Add a post-upload action picker: copy link, open link, reveal local file, or do nothing
 - [ ] Add clipboard image polling or a paste action for faster non-screenshot uploads
 - [ ] Add upload progress UI for larger files
 - [ ] Add optional JPEG/PNG compression settings in the app

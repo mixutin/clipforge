@@ -31,10 +31,27 @@ targets:
       - sdk: ScreenCaptureKit.framework
       - sdk: Carbon.framework
       - package: Sparkle
+  ClipforgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.2"
+    sources:
+      - Tests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.clipforge.app.tests
+        PRODUCT_NAME: ClipforgeTests
+    dependencies:
+      - target: Clipforge
 schemes:
   Clipforge:
     build:
       targets:
         Clipforge: all
+        ClipforgeTests: [test]
+    test:
+      targets:
+        - ClipforgeTests
     run:
       config: Debug

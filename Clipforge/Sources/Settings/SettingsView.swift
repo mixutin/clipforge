@@ -31,8 +31,34 @@ struct SettingsView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
 
-                Toggle("Copy uploaded URL to the clipboard automatically", isOn: settings.binding(for: \.autoCopyLinkEnabled))
+                Toggle("Copy uploaded content to the clipboard automatically", isOn: settings.binding(for: \.autoCopyLinkEnabled))
                     .disabled(settings.captureDestinationMode == .clipboardOnly)
+
+                Picker("Copied upload format", selection: settings.binding(for: \.uploadCopyFormat)) {
+                    ForEach(AppSettings.UploadCopyFormat.allCases) { format in
+                        Text(format.title).tag(format)
+                    }
+                }
+
+                Text(settings.uploadCopyFormat.helpText)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                Picker("Success popup action", selection: settings.binding(for: \.postUploadAction)) {
+                    ForEach(AppSettings.PostUploadAction.allCases) { action in
+                        Text(action.title(for: settings.uploadCopyFormat)).tag(action)
+                    }
+                }
+
+                Text(settings.postUploadAction.helpText(for: settings.uploadCopyFormat))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                if settings.postUploadAction == .revealLocalFile && !settings.saveLocalScreenshotEnabled {
+                    Text("Reveal Local File needs local screenshot saving turned on, otherwise the popup will hide that quick action.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
 
                 Toggle("Save a local screenshot copy after capture", isOn: settings.binding(for: \.saveLocalScreenshotEnabled))
 
@@ -48,7 +74,7 @@ struct SettingsView: View {
                 }
 
                 if settings.captureDestinationMode == .clipboardOnly {
-                    Text("Clipboard Only mode copies the captured image itself, not a URL.")
+                    Text("Clipboard Only mode copies the captured image itself, not a URL. The success popup action above applies to successful server uploads.")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -93,8 +119,14 @@ struct SettingsView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
 
-                Button("Open Screen Recording Settings") {
-                    PermissionManager.openScreenCaptureSettings()
+                HStack {
+                    Button("Open Screen Recording Settings") {
+                        PermissionManager.openScreenCaptureSettings()
+                    }
+
+                    Button("Open Permission Guide") {
+                        appController.openPermissionGuide()
+                    }
                 }
             }
 

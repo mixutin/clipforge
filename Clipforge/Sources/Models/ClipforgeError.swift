@@ -7,6 +7,7 @@ enum ClipforgeError: LocalizedError, Sendable {
     case selectionCancelled
     case activeWindowUnavailable
     case clipboardDoesNotContainImage
+    case droppedItemNotSupported
     case uploadUnauthorized
     case uploadTooLarge
     case serverUnreachable
@@ -32,6 +33,8 @@ enum ClipforgeError: LocalizedError, Sendable {
             return "Clipforge could not find a capturable active window."
         case .clipboardDoesNotContainImage:
             return "The clipboard does not currently contain an image."
+        case .droppedItemNotSupported:
+            return "Drop a PNG, JPG, WEBP, or an image from another app."
         case .uploadUnauthorized:
             return "The Clipforge Server rejected the API token."
         case .uploadTooLarge:

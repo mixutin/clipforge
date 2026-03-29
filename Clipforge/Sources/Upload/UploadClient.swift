@@ -46,12 +46,7 @@ struct UploadClient: Sendable {
                 throw mapHTTPStatus(code: httpResponse.statusCode, payload: data)
             }
 
-            let uploadResponse = try JSONDecoder().decode(UploadResponse.self, from: data)
-            guard let url = URL(string: uploadResponse.url) else {
-                throw ClipforgeError.badServerResponse
-            }
-
-            return url
+            return try decodeUploadURL(from: data)
         } catch let error as ClipforgeError {
             throw error
         } catch let error as URLError {
@@ -59,6 +54,17 @@ struct UploadClient: Sendable {
         } catch {
             throw ClipforgeError.generic(error.localizedDescription)
         }
+    }
+
+    private func decodeUploadURL(from data: Data) throws -> URL {
+        guard
+            let uploadResponse = try? JSONDecoder().decode(UploadResponse.self, from: data),
+            let url = URL(string: uploadResponse.url)
+        else {
+            throw ClipforgeError.badServerResponse
+        }
+
+        return url
     }
 
     private func mapNetworkError(_ error: URLError) -> ClipforgeError {
