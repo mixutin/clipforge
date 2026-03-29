@@ -26,6 +26,14 @@ struct MenuBarView: View {
                 }
 
                 actionButton(
+                    title: "Capture Active Window",
+                    subtitle: "Capture the frontmost app window without selecting a region",
+                    icon: "macwindow"
+                ) {
+                    appController.captureActiveWindow()
+                }
+
+                actionButton(
                     title: "Upload Clipboard Image",
                     subtitle: "Send the current clipboard image without recapturing",
                     icon: "doc.on.clipboard"

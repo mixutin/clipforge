@@ -23,6 +23,19 @@ class FileTooLargeError(ValueError):
     pass
 
 
+def validate_file_signature(header_bytes: bytes, extension: str) -> None:
+    if extension == ".png" and header_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return
+
+    if extension == ".jpg" and header_bytes.startswith(b"\xff\xd8\xff"):
+        return
+
+    if extension == ".webp" and header_bytes.startswith(b"RIFF") and header_bytes[8:12] == b"WEBP":
+        return
+
+    raise FileValidationError("The uploaded file contents do not match a supported image format.")
+
+
 def validate_image_type(filename: str | None, content_type: str | None) -> str:
     if not content_type or content_type not in ALLOWED_CONTENT_TYPES:
         raise FileValidationError("Only PNG, JPG, JPEG, and WEBP uploads are supported.")
@@ -51,6 +64,7 @@ async def save_upload_file(
     final_path = destination_dir / generated_name
 
     total_bytes = 0
+    header_bytes = bytearray()
 
     try:
         with temporary_path.open("wb") as file_handle:
@@ -61,11 +75,16 @@ async def save_upload_file(
                         f"Upload exceeds the {max_upload_bytes // (1024 * 1024)} MB limit."
                     )
 
+                if len(header_bytes) < 16:
+                    remaining = 16 - len(header_bytes)
+                    header_bytes.extend(chunk[:remaining])
+
                 file_handle.write(chunk)
 
         if total_bytes == 0:
             raise FileValidationError("Empty uploads are not allowed.")
 
+        validate_file_signature(bytes(header_bytes), extension)
         temporary_path.replace(final_path)
     except Exception:
         temporary_path.unlink(missing_ok=True)

@@ -14,6 +14,7 @@
 		26BCC7EBB3395017E3808017 /* AppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB8A862676651DC9D999323 /* AppController.swift */; };
 		2A514954210CFD1D72064F32 /* CapturedAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FA2F82775549FEA4F8C15C /* CapturedAsset.swift */; };
 		38F64A5152DFE855E7DD977D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DFC7844B577785E81CB591 /* SettingsStore.swift */; };
+		4A38B5E03CF5FF47331FE36F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56D427F021BD2114F68A67BE /* KeychainService.swift */; };
 		599A5E64A80177F8CD03A8B3 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D68C151ECAF6309972DB800B /* Carbon.framework */; };
 		67315F6F524D9860E264CE11 /* ClipforgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A2382943BB77EC85192FD4 /* ClipforgeApp.swift */; };
 		684E5B1EB3B600F9D1BB0DC7 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD6B7EE1528CA1996B365F9 /* HistoryStore.swift */; };
@@ -25,7 +26,9 @@
 		9BA2CF4CC4D2E4FCAF1CCD03 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68685614CB93045C60A1505A /* MenuBarController.swift */; };
 		B0D8DA151D7CF58957EB83D3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */; };
 		B56F5CDFDE7C5C4BF6B4F5BC /* MultipartFormDataBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5386BE6AE97D057FCC750C0 /* MultipartFormDataBuilder.swift */; };
+		B8E779C0902A36C6BF786D68 /* ThumbnailGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */; };
 		C37E1BF69284D8E6E0CE913B /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 266E2ACD43AECEFBE16F104C /* ClipboardService.swift */; };
+		E16C24D8A26F3716C3E13608 /* HotkeyRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */; };
 		E421CBFF6FD1087876ADB970 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF02CDE7436EDFDB7E11E7A4 /* MenuBarView.swift */; };
 		EA1CD043F2076A8EA3078D1E /* UploadRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */; };
 		F798183B33DD370E71C20951 /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F39D3C43764C306840DD6C0 /* ScreenCaptureKit.framework */; };
@@ -41,6 +44,7 @@
 		3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadRecord.swift; sourceTree = "<group>"; };
 		546AB298974720DBF85A6437 /* HotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyService.swift; sourceTree = "<group>"; };
 		54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentUploadsList.swift; sourceTree = "<group>"; };
+		56D427F021BD2114F68A67BE /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		5F39D3C43764C306840DD6C0 /* ScreenCaptureKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenCaptureKit.framework; path = System/Library/Frameworks/ScreenCaptureKit.framework; sourceTree = SDKROOT; };
 		68685614CB93045C60A1505A /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		6A7BFFD8DC928EC82F63BC87 /* SelectionOverlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionOverlayController.swift; sourceTree = "<group>"; };
@@ -50,6 +54,8 @@
 		B8FA2F82775549FEA4F8C15C /* CapturedAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedAsset.swift; sourceTree = "<group>"; };
 		C33160FDE098A61A0A6339A6 /* CaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureService.swift; sourceTree = "<group>"; };
 		C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGenerator.swift; sourceTree = "<group>"; };
+		C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderView.swift; sourceTree = "<group>"; };
 		D5A2382943BB77EC85192FD4 /* ClipforgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipforgeApp.swift; sourceTree = "<group>"; };
 		D68C151ECAF6309972DB800B /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		DA8DFCC224828629651B7B90 /* UploadClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadClient.swift; sourceTree = "<group>"; };
@@ -113,6 +119,7 @@
 		232DE0B895192E7AC5296A47 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */,
 				54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */,
 			);
 			path = Views;
@@ -187,7 +194,9 @@
 				3B53C41A82477C390536133F /* FilenameGenerator.swift */,
 				0BD6B7EE1528CA1996B365F9 /* HistoryStore.swift */,
 				546AB298974720DBF85A6437 /* HotkeyService.swift */,
+				56D427F021BD2114F68A67BE /* KeychainService.swift */,
 				E5F5203F2A6018B20CA3FD9A /* PermissionManager.swift */,
+				C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */,
 				81AD97158435943DF5ECC0FA /* ToastPresenter.swift */,
 			);
 			path = Utilities;
@@ -262,7 +271,9 @@
 				96F24D37A827787C440DD878 /* ClipforgeError.swift in Sources */,
 				1B69D8D7C775BEAB377849F6 /* FilenameGenerator.swift in Sources */,
 				684E5B1EB3B600F9D1BB0DC7 /* HistoryStore.swift in Sources */,
+				E16C24D8A26F3716C3E13608 /* HotkeyRecorderView.swift in Sources */,
 				019872B4CE290349ACC13881 /* HotkeyService.swift in Sources */,
+				4A38B5E03CF5FF47331FE36F /* KeychainService.swift in Sources */,
 				9BA2CF4CC4D2E4FCAF1CCD03 /* MenuBarController.swift in Sources */,
 				E421CBFF6FD1087876ADB970 /* MenuBarView.swift in Sources */,
 				B56F5CDFDE7C5C4BF6B4F5BC /* MultipartFormDataBuilder.swift in Sources */,
@@ -271,6 +282,7 @@
 				71B66E940E28309F55558428 /* SelectionOverlayController.swift in Sources */,
 				38F64A5152DFE855E7DD977D /* SettingsStore.swift in Sources */,
 				B0D8DA151D7CF58957EB83D3 /* SettingsView.swift in Sources */,
+				B8E779C0902A36C6BF786D68 /* ThumbnailGenerator.swift in Sources */,
 				FA873BF6125BAA0797C3B935 /* ToastPresenter.swift in Sources */,
 				97AC0D08696CAEB0F592FD05 /* UploadClient.swift in Sources */,
 				EA1CD043F2076A8EA3078D1E /* UploadRecord.swift in Sources */,

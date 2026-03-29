@@ -26,12 +26,25 @@ def _positive_int(name: str, default: int) -> int:
     return parsed
 
 
+def _split_csv_env(name: str) -> tuple[str, ...]:
+    raw_value = os.getenv(name, "").strip()
+    if not raw_value:
+        return ()
+
+    return tuple(
+        part.strip()
+        for part in raw_value.split(",")
+        if part.strip()
+    )
+
+
 @dataclass(frozen=True)
 class Settings:
     base_url: str
     upload_dir: Path
     api_token: str
     max_upload_mb: int
+    cors_allowed_origins: tuple[str, ...]
     upload_rate_limit_per_minute: int = 60
 
     @property
@@ -46,6 +59,7 @@ def get_settings() -> Settings:
         upload_dir=Path(os.getenv("CLIPFORGE_UPLOAD_DIR", "uploads")).expanduser(),
         api_token=_required_env("CLIPFORGE_API_TOKEN"),
         max_upload_mb=_positive_int("CLIPFORGE_MAX_UPLOAD_MB", 10),
+        cors_allowed_origins=_split_csv_env("CLIPFORGE_CORS_ALLOW_ORIGINS"),
     )
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     return settings

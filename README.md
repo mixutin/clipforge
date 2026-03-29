@@ -16,11 +16,15 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 
 - Native macOS menu bar workflow
 - Area capture and full-screen capture
+- Active-window capture
 - Global hotkey support
+- Configurable hotkey recorder UI
 - ScreenCaptureKit-based screenshots
 - Bearer-token authenticated multipart uploads
+- Keychain-backed API token storage
 - Automatic clipboard copy of uploaded URLs
 - Local recent upload history
+- Thumbnail previews in recent uploads
 - Local-first settings
 - Self-hosted backend with local disk storage
 - Permissive open-source licensing
@@ -75,6 +79,7 @@ Build and run the `Clipforge` scheme, then configure:
 
 - [Architecture](./docs/architecture.md)
 - [Self-Hosting Guide](./docs/self-hosting.md)
+- [Project TODO](./TODO.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Security Policy](./SECURITY.md)
 
