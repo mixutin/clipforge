@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build or rebuild, for example v0.2.0"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,6 +24,8 @@ jobs:
   build-release:
     name: Build And Publish Release
     runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
     outputs:
       artifact_name: ${{ steps.feed.outputs.artifact_name }}
@@ -26,6 +34,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -55,8 +64,8 @@ jobs:
           BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Contents/Info.plist")"
           EXPECTED_TAG="v$VERSION"
 
-          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match app version $VERSION." >&2
+          if [ "$RELEASE_TAG" != "$EXPECTED_TAG" ]; then
+            echo "Tag $RELEASE_TAG does not match app version $VERSION." >&2
             exit 1
           fi
 
@@ -68,7 +77,7 @@ jobs:
       - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
           VERSION: ${{ steps.build.outputs.version }}
           DMG_PATH: ${{ steps.build.outputs.dmg_path }}
         run: |
@@ -90,7 +99,7 @@ jobs:
         id: feed
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
           VERSION: ${{ steps.build.outputs.version }}
           DMG_PATH: ${{ steps.build.outputs.dmg_path }}
           SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
@@ -105,11 +114,7 @@ jobs:
           gh release view "$TAG" --json body --jq .body > "$RELEASE_NOTES_PATH"
 
           if [ ! -s "$RELEASE_NOTES_PATH" ] || [ "$(tr -d '\n\r\t ' < "$RELEASE_NOTES_PATH")" = "null" ]; then
-            cat > "$RELEASE_NOTES_PATH" <<EOF
-            # Clipforge $VERSION
-
-            Download and install the latest Clipforge release from GitHub.
-            EOF
+            printf '# Clipforge %s\n\nDownload and install the latest Clipforge release from GitHub.\n' "$VERSION" > "$RELEASE_NOTES_PATH"
           fi
 
           printf '%s' "$SPARKLE_PRIVATE_ED_KEY" | "$RUNNER_TEMP/bin/generate_appcast" \
@@ -121,7 +126,7 @@ jobs:
 
           rm -f "$FEED_DMG_PATH"
 
-          cat > "$FEED_DIR/index.html" <<EOF
+          cat <<EOF > "$FEED_DIR/index.html"
           <!doctype html>
           <html lang="en">
             <head>
