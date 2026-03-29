@@ -26,6 +26,9 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall app
 
+      - name: Run backend tests
+        run: pytest -q
+
       - name: Import app
         env:
           CLIPFORGE_BASE_URL: http://127.0.0.1:8000

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from ..auth import require_bearer_token
 from ..config import Settings, get_settings
@@ -12,6 +14,14 @@ from ..utils.files import (
     FileValidationError,
     build_public_url,
     save_upload_file,
+)
+from ..utils.share import (
+    ShareMetadata,
+    build_share_page_html,
+    build_share_url,
+    make_share_context,
+    normalize_theme_color,
+    render_share_template,
 )
 
 router = APIRouter()
@@ -38,7 +48,7 @@ async def upload_image(
     except FileValidationError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except FileTooLargeError as exc:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=str(exc)) from exc
+        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(exc)) from exc
     except OSError as exc:
         logger.exception("Could not save upload from %s", client_ip)
         raise HTTPException(
@@ -46,5 +56,51 @@ async def upload_image(
             detail="Could not save uploaded file.",
         ) from exc
 
+    direct_url = build_public_url(settings.base_url, filename)
+    returned_url = build_share_url(settings.base_url, filename) if settings.enable_share_embeds else direct_url
+
     logger.info("Uploaded %s (%s bytes) from %s", filename, total_bytes, client_ip)
-    return {"url": build_public_url(settings.base_url, filename)}
+    return {
+        "url": returned_url,
+        "direct_url": direct_url,
+        "share_url": build_share_url(settings.base_url, filename),
+    }
+
+
+@router.get("/share/{filename}", response_class=HTMLResponse, response_model=None)
+async def share_image(
+    filename: str,
+    settings: Settings = Depends(get_settings),
+) -> Response:
+    safe_filename = Path(filename).name
+    if safe_filename != filename:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.")
+
+    file_path = settings.upload_dir / safe_filename
+    if file_path.is_file() is False:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.")
+
+    direct_url = build_public_url(settings.base_url, safe_filename)
+    share_url = build_share_url(settings.base_url, safe_filename)
+
+    if settings.enable_share_embeds is False:
+        return RedirectResponse(url=direct_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+    context = make_share_context(
+        filename=safe_filename,
+        direct_url=direct_url,
+        share_url=share_url,
+    )
+    title = render_share_template(settings.embed_title_template, context) or "Clipforge Upload"
+    description = render_share_template(settings.embed_description_template, context) or "Shared via Clipforge"
+    site_name = render_share_template(settings.embed_site_name, context) or "Clipforge"
+
+    metadata = ShareMetadata(
+        title=title,
+        description=description,
+        site_name=site_name,
+        direct_url=direct_url,
+        share_url=share_url,
+        theme_color=normalize_theme_color(settings.embed_theme_color),
+    )
+    return HTMLResponse(content=build_share_page_html(metadata))

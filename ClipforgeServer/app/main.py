@@ -20,7 +20,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Clipforge Server",
-        version="0.1.0",
+        version="0.3.0",
         docs_url="/docs",
         redoc_url=None,
     )
@@ -42,6 +42,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "max_upload_mb": settings.max_upload_mb,
             "upload_dir": str(settings.upload_dir),
+            "share_embeds_enabled": settings.enable_share_embeds,
         }
 
     return app

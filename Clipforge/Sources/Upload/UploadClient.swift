@@ -76,6 +76,10 @@ struct UploadClient: Sendable {
             return .uploadUnauthorized
         case 413:
             return .uploadTooLarge
+        case 408, 425, 429, 500, 502, 503, 504:
+            return .temporaryUploadFailure(
+                serverMessage(from: payload) ?? "The Clipforge Server is temporarily unavailable."
+            )
         default:
             return .serverError(serverMessage(from: payload) ?? "Clipforge Server returned HTTP \(code).")
         }

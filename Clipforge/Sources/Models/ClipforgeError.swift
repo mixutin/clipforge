@@ -10,6 +10,7 @@ enum ClipforgeError: LocalizedError, Sendable {
     case uploadUnauthorized
     case uploadTooLarge
     case serverUnreachable
+    case temporaryUploadFailure(String)
     case badServerResponse
     case failedToEncodeImage
     case failedToSaveLocalCopy(String)
@@ -37,6 +38,8 @@ enum ClipforgeError: LocalizedError, Sendable {
             return "The image is larger than the server allows."
         case .serverUnreachable:
             return "Clipforge could not reach the configured server."
+        case .temporaryUploadFailure(let message):
+            return message
         case .badServerResponse:
             return "The server returned an unexpected response."
         case .failedToEncodeImage:
@@ -49,6 +52,15 @@ enum ClipforgeError: LocalizedError, Sendable {
             return message
         case .generic(let message):
             return message
+        }
+    }
+
+    var isRetryableUploadFailure: Bool {
+        switch self {
+        case .serverUnreachable, .temporaryUploadFailure:
+            return true
+        default:
+            return false
         }
     }
 }

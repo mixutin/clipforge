@@ -23,11 +23,13 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Bearer-token authenticated multipart uploads
 - Keychain-backed API token storage
 - Automatic clipboard copy of uploaded URLs
+- Clipboard-only capture mode when you do not want to use a server
 - Local recent upload history
 - Thumbnail previews in recent uploads
 - Local-first settings
 - Sparkle-powered in-app update checks
 - Self-hosted backend with local disk storage
+- Optional Open Graph share pages for cleaner Discord-style embeds
 - Permissive open-source licensing
 
 ## Repo Layout

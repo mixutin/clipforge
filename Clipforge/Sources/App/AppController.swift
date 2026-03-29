@@ -4,9 +4,35 @@ import os
 
 @MainActor
 final class AppController: ObservableObject {
+    private static let maxUploadAttempts = 3
+
     enum ActionSource {
         case menuBar
         case hotkey
+    }
+
+    private enum DeliveryDestination {
+        case upload(AppSettings)
+        case clipboard
+    }
+
+    private enum LocalSaveStatus: Equatable {
+        case notRequested
+        case saved(URL)
+        case failed
+
+        var savedFileURL: URL? {
+            guard case .saved(let url) = self else { return nil }
+            return url
+        }
+
+        var didFail: Bool {
+            if case .failed = self {
+                return true
+            }
+
+            return false
+        }
     }
 
     static let shared = AppController()
@@ -31,14 +57,32 @@ final class AppController: ObservableObject {
     }
 
     var serverSummary: String {
-        guard
-            let url = URL(string: settingsStore.serverURL),
-            let host = url.host
-        else {
-            return "Server not configured"
+        switch settingsStore.captureDestinationMode {
+        case .clipboardOnly:
+            return "Clipboard only"
+        case .serverUpload:
+            switch settingsStore.uploadConfigurationState() {
+            case .ready(let settings):
+                return hostSummary(for: settings.serverURL)
+            case .notConfigured:
+                return "Server required"
+            case .invalid:
+                return "Server setup incomplete"
+            }
+        case .automatic:
+            switch settingsStore.uploadConfigurationState() {
+            case .ready(let settings):
+                return hostSummary(for: settings.serverURL)
+            case .notConfigured:
+                return "Auto: Clipboard"
+            case .invalid:
+                return "Server setup incomplete"
+            }
         }
+    }
 
-        return host
+    var canUploadClipboardImage: Bool {
+        settingsStore.hasReadyUploadConfiguration
     }
 
     func configure() {
@@ -113,7 +157,7 @@ final class AppController: ObservableObject {
                 cgImage: cgImage,
                 filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
             )
-            try await upload(asset: asset)
+            try await deliver(asset: asset)
         } catch {
             if case ClipforgeError.selectionCancelled = error {
                 return
@@ -133,7 +177,7 @@ final class AppController: ObservableObject {
                 cgImage: cgImage,
                 filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
             )
-            try await upload(asset: asset)
+            try await deliver(asset: asset)
         } catch {
             present(error: error, title: "Capture failed")
         }
@@ -149,7 +193,7 @@ final class AppController: ObservableObject {
                 cgImage: cgImage,
                 filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
             )
-            try await upload(asset: asset)
+            try await deliver(asset: asset)
         } catch {
             present(error: error, title: "Capture failed")
         }
@@ -163,7 +207,7 @@ final class AppController: ObservableObject {
             let asset = try clipboardService.loadImageAsset(
                 filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
             )
-            try await upload(asset: asset)
+            try await deliver(asset: asset, forceUpload: true)
         } catch {
             present(error: error, title: "Clipboard upload failed")
         }
@@ -183,45 +227,131 @@ final class AppController: ObservableObject {
         return true
     }
 
-    private func upload(asset: CapturedAsset) async throws {
-        statusMessage = "Uploading…"
+    private func deliver(asset: CapturedAsset, forceUpload: Bool = false) async throws {
+        let localSaveStatus = saveLocalCopyIfNeeded(asset: asset, settings: settingsStore.currentSettings)
 
-        let settings = try settingsStore.validate()
-        let localSaveWarning = try saveLocalCopyIfNeeded(asset: asset, settings: settings)
-        let remoteURL = try await uploadClient.upload(asset: asset, settings: settings)
+        switch try resolveDeliveryDestination(forceUpload: forceUpload) {
+        case .upload(let settings):
+            await uploadAndFinalize(asset: asset, settings: settings, localSaveStatus: localSaveStatus)
+        case .clipboard:
+            statusMessage = "Copying to clipboard…"
 
-        if settings.autoCopyLinkEnabled {
-            clipboardService.copyString(remoteURL.absoluteString)
-        }
+            try clipboardService.copyImageAsset(asset)
 
-        let record = UploadRecord(
-            localFilename: asset.filename,
-            remoteURL: remoteURL.absoluteString,
-            thumbnailPNGData: ThumbnailGenerator.makePNGData(from: asset.data),
-            createdAt: Date()
-        )
-        recentUploads = historyStore.add(record)
+            let message: String
+            if localSaveStatus.didFail {
+                message = "Image copied to your clipboard, but the local copy could not be saved."
+            } else {
+                message = "Image copied to your clipboard. Paste it into any app."
+            }
 
-        let message: String
-        if let localSaveWarning {
-            message = localSaveWarning
-        } else if settings.autoCopyLinkEnabled {
-            message = "Uploaded successfully. Link copied to your clipboard."
-        } else {
-            message = "Uploaded successfully."
-        }
-
-        toastPresenter.showSuccess(
-            title: "Clipforge uploaded your image",
-            message: message,
-            actionTitle: "Open"
-        ) {
-            NSWorkspace.shared.open(remoteURL)
+            toastPresenter.showSuccess(
+                title: "Clipforge copied your screenshot",
+                message: message
+            )
         }
     }
 
-    private func saveLocalCopyIfNeeded(asset: CapturedAsset, settings: AppSettings) throws -> String? {
-        guard settings.saveLocalScreenshotEnabled else { return nil }
+    private func uploadAndFinalize(
+        asset: CapturedAsset,
+        settings: AppSettings,
+        localSaveStatus: LocalSaveStatus,
+        isManualRetry: Bool = false
+    ) async {
+        do {
+            let remoteURL = try await performUploadWithRetry(
+                asset: asset,
+                settings: settings,
+                isManualRetry: isManualRetry
+            )
+            let revealedLocalFile = revealLocalFileIfNeeded(localSaveStatus: localSaveStatus, settings: settings)
+
+            if settings.autoCopyLinkEnabled {
+                clipboardService.copyString(remoteURL.absoluteString)
+            }
+
+            let record = UploadRecord(
+                localFilename: asset.filename,
+                remoteURL: remoteURL.absoluteString,
+                thumbnailPNGData: ThumbnailGenerator.makePNGData(from: asset.data),
+                createdAt: Date()
+            )
+            recentUploads = historyStore.add(record)
+
+            let message: String
+            if localSaveStatus.didFail {
+                message = "Uploaded successfully, but the local copy could not be saved."
+            } else if settings.autoCopyLinkEnabled && revealedLocalFile {
+                message = "Uploaded successfully. Link copied and local file revealed in Finder."
+            } else if settings.autoCopyLinkEnabled {
+                message = "Uploaded successfully. Link copied to your clipboard."
+            } else if revealedLocalFile {
+                message = "Uploaded successfully. Local file revealed in Finder."
+            } else {
+                message = "Uploaded successfully."
+            }
+
+            toastPresenter.showSuccess(
+                title: "Clipforge uploaded your image",
+                message: message,
+                actionTitle: "Open"
+            ) {
+                NSWorkspace.shared.open(remoteURL)
+            }
+        } catch {
+            handleUploadFailure(
+                error,
+                asset: asset,
+                settings: settings,
+                localSaveStatus: localSaveStatus
+            )
+        }
+    }
+
+    private func performUploadWithRetry(
+        asset: CapturedAsset,
+        settings: AppSettings,
+        isManualRetry: Bool
+    ) async throws -> URL {
+        for attempt in 1...Self.maxUploadAttempts {
+            statusMessage = uploadStatusMessage(forAttempt: attempt, isManualRetry: isManualRetry)
+
+            do {
+                return try await uploadClient.upload(asset: asset, settings: settings)
+            } catch let error as ClipforgeError {
+                guard error.isRetryableUploadFailure, attempt < Self.maxUploadAttempts else {
+                    throw error
+                }
+
+                logger.warning("Temporary upload failure on attempt \(attempt): \(error.localizedDescription)")
+                try? await Task.sleep(for: retryDelay(afterAttempt: attempt))
+            } catch {
+                throw error
+            }
+        }
+
+        throw ClipforgeError.serverUnreachable
+    }
+
+    private func uploadStatusMessage(forAttempt attempt: Int, isManualRetry: Bool) -> String {
+        if attempt == 1 {
+            return isManualRetry ? "Retrying upload…" : "Uploading…"
+        }
+
+        return "Retrying upload (\(attempt) of \(Self.maxUploadAttempts))…"
+    }
+
+    private func retryDelay(afterAttempt attempt: Int) -> Duration {
+        switch attempt {
+        case 1:
+            return .seconds(1)
+        default:
+            return .seconds(2)
+        }
+    }
+
+    private func saveLocalCopyIfNeeded(asset: CapturedAsset, settings: AppSettings) -> LocalSaveStatus {
+        guard settings.saveLocalScreenshotEnabled else { return .notRequested }
 
         let directoryURL = URL(fileURLWithPath: settings.localSaveFolder, isDirectory: true)
 
@@ -229,10 +359,75 @@ final class AppController: ObservableObject {
             try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
             let destinationURL = directoryURL.appendingPathComponent(asset.filename)
             try asset.data.write(to: destinationURL, options: .atomic)
-            return nil
+            return .saved(destinationURL)
         } catch {
             logger.error("Failed to save local screenshot: \(error.localizedDescription)")
-            return "Uploaded successfully, but the local copy could not be saved."
+            return .failed
+        }
+    }
+
+    private func revealLocalFileIfNeeded(localSaveStatus: LocalSaveStatus, settings: AppSettings) -> Bool {
+        guard settings.revealSavedFileAfterUploadEnabled,
+              let savedFileURL = localSaveStatus.savedFileURL
+        else {
+            return false
+        }
+
+        NSWorkspace.shared.activateFileViewerSelecting([savedFileURL])
+        return true
+    }
+
+    private func handleUploadFailure(
+        _ error: Error,
+        asset: CapturedAsset,
+        settings: AppSettings,
+        localSaveStatus: LocalSaveStatus
+    ) {
+        let clipforgeError = error as? ClipforgeError ?? .generic(error.localizedDescription)
+        let message = uploadFailureMessage(for: clipforgeError, localSaveStatus: localSaveStatus)
+
+        if clipforgeError.isRetryableUploadFailure {
+            toastPresenter.showError(
+                title: "Clipforge could not finish the upload",
+                message: message,
+                actionTitle: "Retry Upload"
+            ) { [weak self] in
+                self?.retryUpload(asset: asset, settings: settings, localSaveStatus: localSaveStatus)
+            }
+            return
+        }
+
+        switch clipforgeError {
+        case .uploadUnauthorized:
+            toastPresenter.showError(
+                title: "Upload failed",
+                message: message,
+                actionTitle: "Settings"
+            ) { [weak self] in
+                self?.openSettings()
+            }
+        default:
+            toastPresenter.showError(title: "Upload failed", message: message)
+        }
+    }
+
+    private func retryUpload(
+        asset: CapturedAsset,
+        settings: AppSettings,
+        localSaveStatus: LocalSaveStatus
+    ) {
+        Task { @MainActor [weak self] in
+            guard let self, self.isBusy == false else { return }
+
+            self.isBusy = true
+            defer { self.endWork() }
+
+            await self.uploadAndFinalize(
+                asset: asset,
+                settings: settings,
+                localSaveStatus: localSaveStatus,
+                isManualRetry: true
+            )
         }
     }
 
@@ -266,5 +461,68 @@ final class AppController: ObservableObject {
         default:
             toastPresenter.showError(title: title, message: clipforgeError.localizedDescription)
         }
+    }
+
+    private func uploadFailureMessage(
+        for error: ClipforgeError,
+        localSaveStatus: LocalSaveStatus
+    ) -> String {
+        let baseMessage: String
+
+        switch error {
+        case .serverUnreachable:
+            baseMessage = "Clipforge tried \(Self.maxUploadAttempts) times but could not reach your server. Check that the server is running and reachable, then try again."
+        case .temporaryUploadFailure(let message):
+            baseMessage = "Clipforge tried \(Self.maxUploadAttempts) times but the server is still temporarily unavailable. \(message)"
+        case .uploadUnauthorized:
+            baseMessage = "The Clipforge Server rejected the API token. Update it in Settings and try again."
+        case .uploadTooLarge:
+            baseMessage = "The image is larger than the server allows. Capture a smaller region or increase the server upload limit."
+        default:
+            baseMessage = error.localizedDescription
+        }
+
+        switch localSaveStatus {
+        case .saved:
+            return "\(baseMessage) The screenshot is still saved locally."
+        case .notRequested:
+            if error.isRetryableUploadFailure {
+                return "\(baseMessage) Retry Upload will resend the same screenshot without making you capture it again."
+            }
+
+            return baseMessage
+        case .failed:
+            return "\(baseMessage) Clipforge also could not save a local fallback copy."
+        }
+    }
+
+    private func resolveDeliveryDestination(forceUpload: Bool) throws -> DeliveryDestination {
+        if forceUpload {
+            return .upload(try settingsStore.validatedUploadSettings())
+        }
+
+        switch settingsStore.captureDestinationMode {
+        case .clipboardOnly:
+            return .clipboard
+        case .serverUpload:
+            return .upload(try settingsStore.validatedUploadSettings())
+        case .automatic:
+            switch settingsStore.uploadConfigurationState() {
+            case .ready(let settings):
+                return .upload(settings)
+            case .notConfigured:
+                return .clipboard
+            case .invalid(let error):
+                throw error
+            }
+        }
+    }
+
+    private func hostSummary(for serverURL: String) -> String {
+        guard let url = URL(string: serverURL), let host = url.host else {
+            return "Server not configured"
+        }
+
+        return host
     }
 }

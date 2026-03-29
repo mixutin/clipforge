@@ -15,13 +15,25 @@ struct SettingsView: View {
                 SecureField("Bearer token", text: settings.binding(for: \.apiToken))
                     .textFieldStyle(.roundedBorder)
 
-                Text("Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development. The API token is now stored in your macOS Keychain.")
+                Text("Use HTTPS for remote deployments. `http://127.0.0.1:8000` works well for local development. The API token is stored in your macOS Keychain. If you leave the server blank and use Automatic mode, Clipforge falls back to clipboard-only capture.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
 
             Section("Capture & Upload") {
-                Toggle("Copy returned link to the clipboard automatically", isOn: settings.binding(for: \.autoCopyLinkEnabled))
+                Picker("After capture", selection: settings.binding(for: \.captureDestinationMode)) {
+                    ForEach(AppSettings.CaptureDestinationMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+
+                Text(settings.captureDestinationMode.helpText)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                Toggle("Copy uploaded URL to the clipboard automatically", isOn: settings.binding(for: \.autoCopyLinkEnabled))
+                    .disabled(settings.captureDestinationMode == .clipboardOnly)
+
                 Toggle("Save a local screenshot copy after capture", isOn: settings.binding(for: \.saveLocalScreenshotEnabled))
 
                 Picker("Filename format", selection: settings.binding(for: \.filenameMode)) {
@@ -34,9 +46,21 @@ struct SettingsView: View {
                     Text("Global hotkey")
                     HotkeyRecorderView(hotkey: settings.binding(for: \.hotkey))
                 }
+
+                if settings.captureDestinationMode == .clipboardOnly {
+                    Text("Clipboard Only mode copies the captured image itself, not a URL.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Local Storage") {
+                Toggle(
+                    "Reveal the saved file in Finder after upload",
+                    isOn: settings.binding(for: \.revealSavedFileAfterUploadEnabled)
+                )
+                .disabled(!settings.saveLocalScreenshotEnabled)
+
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(settings.localSaveFolder)
@@ -58,6 +82,10 @@ struct SettingsView: View {
                         settings.resetLocalFolderToDefault()
                     }
                 }
+
+                Text("This only runs after a successful upload when local screenshot saving is enabled.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Section("Permissions") {

@@ -7,6 +7,7 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 - `GET /health`
 - `POST /upload`
 - `GET /uploads/<filename>`
+- `GET /share/<filename>`
 
 ## Environment Variables
 
@@ -15,6 +16,11 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 - `CLIPFORGE_API_TOKEN`: bearer token required for uploads
 - `CLIPFORGE_MAX_UPLOAD_MB`: max upload size in megabytes
 - `CLIPFORGE_CORS_ALLOW_ORIGINS`: optional comma-separated browser origins allowed for CORS
+- `CLIPFORGE_ENABLE_SHARE_EMBEDS`: when `true`, uploads return a share-page URL with Open Graph metadata instead of the raw image URL
+- `CLIPFORGE_EMBED_TITLE_TEMPLATE`: default embed title template. Supports `{filename}`, `{basename}`, `{direct_url}`, and `{share_url}`
+- `CLIPFORGE_EMBED_DESCRIPTION_TEMPLATE`: default embed description template with the same placeholders
+- `CLIPFORGE_EMBED_SITE_NAME`: default site name for Open Graph and Twitter metadata
+- `CLIPFORGE_EMBED_THEME_COLOR`: optional six-digit hex color used as the share page theme color
 
 ## Run Locally
 
@@ -44,9 +50,16 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
    curl http://127.0.0.1:8000/health
    ```
 
+5. Run the backend tests:
+
+   ```bash
+   pytest -q
+   ```
+
 ## Notes
 
 - Uploads are stored on local disk in `uploads/`
 - Files are served statically from `/uploads`
+- Optional share pages are served from `/share/<filename>` and are useful for Discord-style rich embeds
 - CORS is disabled by default unless `CLIPFORGE_CORS_ALLOW_ORIGINS` is set
 - The built-in rate limiter is an in-memory MVP implementation and is the right place to replace with Redis or a reverse-proxy limit later

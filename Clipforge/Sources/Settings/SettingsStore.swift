@@ -10,7 +10,9 @@ final class SettingsStore: ObservableObject {
         static let legacyAPIToken = "settings.apiToken"
         static let autoCopy = "settings.autoCopy"
         static let saveLocal = "settings.saveLocal"
+        static let revealSavedFileAfterUpload = "settings.revealSavedFileAfterUpload"
         static let localFolder = "settings.localFolder"
+        static let captureDestinationMode = "settings.captureDestinationMode"
         static let filenameMode = "settings.filenameMode"
         static let hotkeyKeyCode = "settings.hotkey.keyCode"
         static let hotkeyModifiers = "settings.hotkey.modifiers"
@@ -26,7 +28,9 @@ final class SettingsStore: ObservableObject {
             Keys.serverURL: AppSettings.default.serverURL,
             Keys.autoCopy: AppSettings.default.autoCopyLinkEnabled,
             Keys.saveLocal: AppSettings.default.saveLocalScreenshotEnabled,
+            Keys.revealSavedFileAfterUpload: AppSettings.default.revealSavedFileAfterUploadEnabled,
             Keys.localFolder: AppSettings.default.localSaveFolder,
+            Keys.captureDestinationMode: AppSettings.default.captureDestinationMode.rawValue,
             Keys.filenameMode: AppSettings.default.filenameMode.rawValue,
             Keys.hotkeyKeyCode: HotkeyDescriptor.default.keyCode,
             Keys.hotkeyModifiers: HotkeyDescriptor.default.modifiers
@@ -76,10 +80,29 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    var revealSavedFileAfterUploadEnabled: Bool {
+        get { defaults.bool(forKey: Keys.revealSavedFileAfterUpload) }
+        set {
+            defaults.set(newValue, forKey: Keys.revealSavedFileAfterUpload)
+            objectWillChange.send()
+        }
+    }
+
     var localSaveFolder: String {
         get { defaults.string(forKey: Keys.localFolder) ?? AppSettings.default.localSaveFolder }
         set {
             defaults.set(newValue, forKey: Keys.localFolder)
+            objectWillChange.send()
+        }
+    }
+
+    var captureDestinationMode: AppSettings.CaptureDestinationMode {
+        get {
+            let rawValue = defaults.string(forKey: Keys.captureDestinationMode) ?? AppSettings.default.captureDestinationMode.rawValue
+            return AppSettings.CaptureDestinationMode(rawValue: rawValue) ?? .automatic
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.captureDestinationMode)
             objectWillChange.send()
         }
     }
@@ -116,7 +139,9 @@ final class SettingsStore: ObservableObject {
             apiToken: apiToken,
             autoCopyLinkEnabled: autoCopyLinkEnabled,
             saveLocalScreenshotEnabled: saveLocalScreenshotEnabled,
+            revealSavedFileAfterUploadEnabled: revealSavedFileAfterUploadEnabled,
             localSaveFolder: localSaveFolder,
+            captureDestinationMode: captureDestinationMode,
             filenameMode: filenameMode
         )
     }
@@ -128,22 +153,54 @@ final class SettingsStore: ObservableObject {
         )
     }
 
+    var hasReadyUploadConfiguration: Bool {
+        if case .ready = uploadConfigurationState() {
+            return true
+        }
+
+        return false
+    }
+
     func validate() throws -> AppSettings {
-        let settings = currentSettings
+        try validatedUploadSettings()
+    }
 
-        guard let url = URL(string: settings.serverURL), url.scheme != nil, url.host != nil else {
+    func validatedUploadSettings() throws -> AppSettings {
+        switch uploadConfigurationState() {
+        case .ready(let settings):
+            return settings
+        case .notConfigured:
             throw ClipforgeError.invalidServerURL
+        case .invalid(let error):
+            throw error
         }
-
-        guard settings.apiToken.isEmpty == false else {
-            throw ClipforgeError.missingAPIToken
-        }
-
-        return settings
     }
 
     func resetLocalFolderToDefault() {
         localSaveFolder = AppSettings.defaultLocalSaveFolder
+    }
+
+    func uploadConfigurationState() -> UploadConfigurationState {
+        let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedToken = apiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedURL.isEmpty && trimmedToken.isEmpty {
+            return .notConfigured
+        }
+
+        if trimmedURL.isEmpty {
+            return .invalid(.invalidServerURL)
+        }
+
+        guard let url = URL(string: trimmedURL), url.scheme != nil, url.host != nil else {
+            return .invalid(.invalidServerURL)
+        }
+
+        guard trimmedToken.isEmpty == false else {
+            return .invalid(.missingAPIToken)
+        }
+
+        return .ready(currentSettings)
     }
 
     private func migrateLegacyAPITokenIfNeeded() {
@@ -163,6 +220,12 @@ final class SettingsStore: ObservableObject {
         _ = KeychainService.saveToken(legacyToken)
         defaults.removeObject(forKey: Keys.legacyAPIToken)
     }
+}
+
+enum UploadConfigurationState {
+    case ready(AppSettings)
+    case notConfigured
+    case invalid(ClipforgeError)
 }
 
 extension Notification.Name {

@@ -10,19 +10,21 @@ The list is intentionally opinionated:
 
 ## Now
 
-- [ ] Add retry and clearer recovery paths for temporary upload failures
-- [ ] Add an option to reveal the local saved file in Finder after upload
 - [ ] Improve permission onboarding with a first-run help screen
 - [ ] Add drag-and-drop image upload support to the menu bar popover
 - [ ] Add basic automated tests around filename generation, history persistence, and upload response decoding
-- [ ] Add backend tests for auth, file validation, and max-size enforcement
 
 ## Recently Completed
 
+- [x] Add clipboard-only capture mode with automatic fallback when no server is configured
 - [x] Move the macOS app API token from `UserDefaults` into Keychain
 - [x] Add a proper hotkey recorder UI so the global shortcut is configurable
 - [x] Add active-window capture in addition to area and full-screen capture
 - [x] Add thumbnail previews to Recent Uploads
+- [x] Add an option to reveal the local saved file in Finder after upload
+- [x] Add retry and clearer recovery paths for temporary upload failures
+- [x] Add backend tests for auth, file validation, and max-size enforcement
+- [x] Add optional Open Graph share pages for Discord-style embeds
 - [x] Tighten backend upload validation with file-signature checks
 - [x] Disable CORS by default unless explicitly configured on the server
 
