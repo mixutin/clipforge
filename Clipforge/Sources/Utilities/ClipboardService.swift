@@ -48,16 +48,16 @@ final class ClipboardService {
         return supportedImageFileURL(in: pasteboard) != nil
     }
 
-    func loadImageAsset(filenameBase: String) throws -> CapturedAsset {
+    func loadImageAsset(filenameBase: String, settings: AppSettings) throws -> CapturedAsset {
         let pasteboard = NSPasteboard.general
 
         if let image = NSImage(pasteboard: pasteboard) {
-            return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase)
+            return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase, settings: settings)
         }
 
         if let fileURL = supportedImageFileURL(in: pasteboard),
            let image = NSImage(contentsOf: fileURL) {
-            return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase)
+            return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase, settings: settings)
         }
 
         throw ClipforgeError.clipboardDoesNotContainImage

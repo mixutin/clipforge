@@ -7,10 +7,10 @@ final class AnnotationEditorController: NSObject, NSWindowDelegate {
     private var continuation: CheckedContinuation<CapturedAsset?, Error>?
     private var isResolving = false
 
-    func edit(asset: CapturedAsset) async throws -> CapturedAsset? {
+    func edit(asset: CapturedAsset, settings: AppSettings) async throws -> CapturedAsset? {
         guard continuation == nil else { return asset }
 
-        let viewModel = try AnnotationEditorViewModel(asset: asset)
+        let viewModel = try AnnotationEditorViewModel(asset: asset, settings: settings)
 
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation

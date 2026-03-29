@@ -47,6 +47,36 @@ struct AppSettings: Sendable {
         }
     }
 
+    enum ImageFormatMode: String, CaseIterable, Codable, Identifiable {
+        case automatic
+        case png
+        case jpeg
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .automatic:
+                return "Automatic"
+            case .png:
+                return "PNG"
+            case .jpeg:
+                return "JPEG"
+            }
+        }
+
+        var helpText: String {
+            switch self {
+            case .automatic:
+                return "Use PNG when transparency is present. Otherwise use JPEG for smaller uploads."
+            case .png:
+                return "Always keep screenshots lossless as PNG. Best for sharp UI, text, and transparency."
+            case .jpeg:
+                return "Always encode as JPEG for smaller files. Transparent regions are flattened onto white."
+            }
+        }
+    }
+
     enum UploadCopyFormat: String, CaseIterable, Codable, Identifiable {
         case url
         case markdownImage
@@ -221,6 +251,8 @@ struct AppSettings: Sendable {
     var apiToken: String
     var autoCopyLinkEnabled: Bool
     var annotationReviewEnabled: Bool
+    var imageFormatMode: ImageFormatMode
+    var jpegCompressionQuality: Double
     var saveLocalScreenshotEnabled: Bool
     var revealSavedFileAfterUploadEnabled: Bool
     var localSaveFolder: String
@@ -241,6 +273,8 @@ struct AppSettings: Sendable {
         apiToken: "",
         autoCopyLinkEnabled: true,
         annotationReviewEnabled: false,
+        imageFormatMode: .automatic,
+        jpegCompressionQuality: 0.92,
         saveLocalScreenshotEnabled: false,
         revealSavedFileAfterUploadEnabled: false,
         localSaveFolder: AppSettings.defaultLocalSaveFolder,

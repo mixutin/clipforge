@@ -183,10 +183,12 @@ final class AppController: ObservableObject {
         defer { endWork() }
 
         do {
+            let currentSettings = settingsStore.currentSettings
             let cgImage = try await captureService.captureArea()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                settings: currentSettings
             )
             try await deliver(asset: asset)
         } catch {
@@ -203,10 +205,12 @@ final class AppController: ObservableObject {
         defer { endWork() }
 
         do {
+            let currentSettings = settingsStore.currentSettings
             let cgImage = try await captureService.captureFullScreen()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                settings: currentSettings
             )
             try await deliver(asset: asset)
         } catch {
@@ -219,10 +223,12 @@ final class AppController: ObservableObject {
         defer { endWork() }
 
         do {
+            let currentSettings = settingsStore.currentSettings
             let cgImage = try await captureService.captureActiveWindow()
             let asset = try CapturedAsset.from(
                 cgImage: cgImage,
-                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                settings: currentSettings
             )
             try await deliver(asset: asset)
         } catch {
@@ -235,8 +241,10 @@ final class AppController: ObservableObject {
         defer { endWork() }
 
         do {
+            let currentSettings = settingsStore.currentSettings
             let asset = try clipboardService.loadImageAsset(
-                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                settings: currentSettings
             )
             try await deliver(asset: asset, forceUpload: true)
         } catch {
@@ -249,9 +257,11 @@ final class AppController: ObservableObject {
         defer { endWork() }
 
         do {
+            let currentSettings = settingsStore.currentSettings
             let asset = try await DroppedImageLoader.loadImageAsset(
                 from: providers,
-                filenameBase: FilenameGenerator.makeBase(using: settingsStore.filenameMode)
+                filenameBase: FilenameGenerator.makeBase(using: currentSettings.filenameMode),
+                settings: currentSettings
             )
             try await deliver(asset: asset, forceUpload: true)
         } catch {
@@ -306,7 +316,7 @@ final class AppController: ObservableObject {
 
         statusMessage = "Opening annotation editor…"
         menuBarController?.closePopover()
-        return try await annotationEditorController.edit(asset: asset)
+        return try await annotationEditorController.edit(asset: asset, settings: settingsStore.currentSettings)
     }
 
     private func uploadAndFinalize(

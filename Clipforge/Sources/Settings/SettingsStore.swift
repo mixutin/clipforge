@@ -10,6 +10,8 @@ final class SettingsStore: ObservableObject {
         static let legacyAPIToken = "settings.apiToken"
         static let autoCopy = "settings.autoCopy"
         static let annotationReview = "settings.annotationReview"
+        static let imageFormatMode = "settings.imageFormatMode"
+        static let jpegCompressionQuality = "settings.jpegCompressionQuality"
         static let saveLocal = "settings.saveLocal"
         static let revealSavedFileAfterUpload = "settings.revealSavedFileAfterUpload"
         static let hasPresentedPermissionGuide = "settings.hasPresentedPermissionGuide"
@@ -32,6 +34,8 @@ final class SettingsStore: ObservableObject {
             Keys.serverURL: AppSettings.default.serverURL,
             Keys.autoCopy: AppSettings.default.autoCopyLinkEnabled,
             Keys.annotationReview: AppSettings.default.annotationReviewEnabled,
+            Keys.imageFormatMode: AppSettings.default.imageFormatMode.rawValue,
+            Keys.jpegCompressionQuality: AppSettings.default.jpegCompressionQuality,
             Keys.saveLocal: AppSettings.default.saveLocalScreenshotEnabled,
             Keys.revealSavedFileAfterUpload: AppSettings.default.revealSavedFileAfterUploadEnabled,
             Keys.localFolder: AppSettings.default.localSaveFolder,
@@ -83,6 +87,29 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.annotationReview) }
         set {
             defaults.set(newValue, forKey: Keys.annotationReview)
+            objectWillChange.send()
+        }
+    }
+
+    var imageFormatMode: AppSettings.ImageFormatMode {
+        get {
+            let rawValue = defaults.string(forKey: Keys.imageFormatMode) ?? AppSettings.default.imageFormatMode.rawValue
+            return AppSettings.ImageFormatMode(rawValue: rawValue) ?? .automatic
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.imageFormatMode)
+            objectWillChange.send()
+        }
+    }
+
+    var jpegCompressionQuality: Double {
+        get {
+            let storedValue = defaults.double(forKey: Keys.jpegCompressionQuality)
+            let resolvedValue = storedValue == 0 ? AppSettings.default.jpegCompressionQuality : storedValue
+            return min(max(resolvedValue, 0.4), 1.0)
+        }
+        set {
+            defaults.set(min(max(newValue, 0.4), 1.0), forKey: Keys.jpegCompressionQuality)
             objectWillChange.send()
         }
     }
@@ -176,6 +203,8 @@ final class SettingsStore: ObservableObject {
             apiToken: apiToken,
             autoCopyLinkEnabled: autoCopyLinkEnabled,
             annotationReviewEnabled: annotationReviewEnabled,
+            imageFormatMode: imageFormatMode,
+            jpegCompressionQuality: jpegCompressionQuality,
             saveLocalScreenshotEnabled: saveLocalScreenshotEnabled,
             revealSavedFileAfterUploadEnabled: revealSavedFileAfterUploadEnabled,
             localSaveFolder: localSaveFolder,

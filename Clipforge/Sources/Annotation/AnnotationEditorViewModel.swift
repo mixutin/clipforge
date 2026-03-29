@@ -5,19 +5,21 @@ import Foundation
 final class AnnotationEditorViewModel: ObservableObject {
     let asset: CapturedAsset
     let image: NSImage
+    private let settings: AppSettings
 
     @Published private(set) var annotations: [ImageAnnotation] = []
     @Published private(set) var draftAnnotation: ImageAnnotation?
     @Published var selectedTool: AnnotationTool = .arrow
     @Published var selectedColor: AnnotationColor = .red
 
-    init(asset: CapturedAsset) throws {
+    init(asset: CapturedAsset, settings: AppSettings) throws {
         guard let image = NSImage(data: asset.data) else {
             throw ClipforgeError.failedToEncodeImage
         }
 
         self.asset = asset
         self.image = image
+        self.settings = settings
     }
 
     var canUndo: Bool {
@@ -91,7 +93,7 @@ final class AnnotationEditorViewModel: ObservableObject {
         image.draw(in: renderRect)
         AnnotationRenderer.draw(annotations, in: renderRect)
 
-        return try CapturedAsset.from(nsImage: outputImage, filenameBase: asset.filenameBase)
+        return try CapturedAsset.from(nsImage: outputImage, filenameBase: asset.filenameBase, settings: settings)
     }
 
     private func pixelSize(for image: NSImage) -> NSSize {

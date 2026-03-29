@@ -4,12 +4,16 @@ import UniformTypeIdentifiers
 
 @MainActor
 enum DroppedImageLoader {
-    static func loadImageAsset(from providers: [NSItemProvider], filenameBase: String) async throws -> CapturedAsset {
+    static func loadImageAsset(
+        from providers: [NSItemProvider],
+        filenameBase: String,
+        settings: AppSettings
+    ) async throws -> CapturedAsset {
         var lastError: Error?
 
         for provider in providers {
             do {
-                if let asset = try await loadImageAsset(from: provider, filenameBase: filenameBase) {
+                if let asset = try await loadImageAsset(from: provider, filenameBase: filenameBase, settings: settings) {
                     return asset
                 }
             } catch {
@@ -28,14 +32,18 @@ enum DroppedImageLoader {
         throw ClipforgeError.droppedItemNotSupported
     }
 
-    private static func loadImageAsset(from provider: NSItemProvider, filenameBase: String) async throws -> CapturedAsset? {
+    private static func loadImageAsset(
+        from provider: NSItemProvider,
+        filenameBase: String,
+        settings: AppSettings
+    ) async throws -> CapturedAsset? {
         var lastError: Error?
 
         if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
             do {
                 if
                     let fileURL = try await loadFileURL(from: provider),
-                    let asset = try loadImageAsset(from: fileURL, filenameBase: filenameBase)
+                    let asset = try loadImageAsset(from: fileURL, filenameBase: filenameBase, settings: settings)
                 {
                     return asset
                 }
@@ -47,7 +55,7 @@ enum DroppedImageLoader {
         if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
             do {
                 if let image = try await loadImage(from: provider) {
-                    return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase)
+                    return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase, settings: settings)
                 }
             } catch {
                 lastError = error
@@ -65,7 +73,7 @@ enum DroppedImageLoader {
         return nil
     }
 
-    private static func loadImageAsset(from fileURL: URL, filenameBase: String) throws -> CapturedAsset? {
+    private static func loadImageAsset(from fileURL: URL, filenameBase: String, settings: AppSettings) throws -> CapturedAsset? {
         let accessedScopedResource = fileURL.startAccessingSecurityScopedResource()
         defer {
             if accessedScopedResource {
@@ -77,7 +85,7 @@ enum DroppedImageLoader {
             return nil
         }
 
-        return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase)
+        return try CapturedAsset.from(nsImage: image, filenameBase: filenameBase, settings: settings)
     }
 
     private static func loadFileURL(from provider: NSItemProvider) async throws -> URL? {

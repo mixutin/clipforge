@@ -40,6 +40,31 @@ struct SettingsView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
 
+                Picker("Image format", selection: settings.binding(for: \.imageFormatMode)) {
+                    ForEach(AppSettings.ImageFormatMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+
+                Text(settings.imageFormatMode.helpText)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("JPEG quality")
+                        Spacer()
+                        Text("\(Int((settings.jpegCompressionQuality * 100).rounded()))%")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Slider(value: settings.binding(for: \.jpegCompressionQuality), in: 0.5...1.0, step: 0.05)
+                }
+
+                Text("Only applies when JPEG is used, including Automatic mode for screenshots without transparency.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
                 Picker("Copied upload format", selection: settings.binding(for: \.uploadCopyFormat)) {
                     ForEach(AppSettings.UploadCopyFormat.allCases) { format in
                         Text(format.title).tag(format)

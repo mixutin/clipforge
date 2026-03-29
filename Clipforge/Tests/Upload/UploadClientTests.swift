@@ -101,6 +101,8 @@ final class UploadClientTests: XCTestCase {
             apiToken: "test-token",
             autoCopyLinkEnabled: true,
             annotationReviewEnabled: false,
+            imageFormatMode: .automatic,
+            jpegCompressionQuality: 0.92,
             saveLocalScreenshotEnabled: false,
             revealSavedFileAfterUploadEnabled: false,
             localSaveFolder: "/tmp",
