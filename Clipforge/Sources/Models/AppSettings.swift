@@ -220,6 +220,7 @@ struct AppSettings: Sendable {
     var serverURL: String
     var apiToken: String
     var autoCopyLinkEnabled: Bool
+    var annotationReviewEnabled: Bool
     var saveLocalScreenshotEnabled: Bool
     var revealSavedFileAfterUploadEnabled: Bool
     var localSaveFolder: String
@@ -239,6 +240,7 @@ struct AppSettings: Sendable {
         serverURL: "http://127.0.0.1:8000",
         apiToken: "",
         autoCopyLinkEnabled: true,
+        annotationReviewEnabled: false,
         saveLocalScreenshotEnabled: false,
         revealSavedFileAfterUploadEnabled: false,
         localSaveFolder: AppSettings.defaultLocalSaveFolder,

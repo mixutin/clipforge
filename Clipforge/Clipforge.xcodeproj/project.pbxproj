@@ -27,13 +27,18 @@
 		71B66E940E28309F55558428 /* SelectionOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A7BFFD8DC928EC82F63BC87 /* SelectionOverlayController.swift */; };
 		72BEA578EC54C0DEE1B14442 /* RecentUploadsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */; };
 		7827656DFE7073431B88418A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DC4966FF7413CDF720BEF2DE /* Sparkle */; };
+		8E46158C71F3587A4A9CA3B4 /* AnnotationEditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */; };
+		953BA25CFCA75211534CD27E /* AnnotationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F9954171CC7589782A6A14 /* AnnotationModels.swift */; };
 		96F24D37A827787C440DD878 /* ClipforgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15786D0E5FB0D07833C9DBDD /* ClipforgeError.swift */; };
 		97805279575A6D0CADF51C52 /* FilenameGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5A84E713F3E7F70214D096 /* FilenameGeneratorTests.swift */; };
 		97AC0D08696CAEB0F592FD05 /* UploadClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8DFCC224828629651B7B90 /* UploadClient.swift */; };
+		9823670CED8A4D435E45056C /* AnnotationEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9C1E6FFB670D238DAEBDBF /* AnnotationEditorViewModel.swift */; };
 		9BA2CF4CC4D2E4FCAF1CCD03 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68685614CB93045C60A1505A /* MenuBarController.swift */; };
+		9DCB99ACFD5CD79E7D0AC98C /* AnnotationCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7EC18F26764720F1D27394 /* AnnotationCanvasView.swift */; };
 		AE1644B33D39678C673358DA /* PermissionOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62A3A364E6BD3903ED05418 /* PermissionOnboardingView.swift */; };
 		B0D8DA151D7CF58957EB83D3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */; };
 		B56F5CDFDE7C5C4BF6B4F5BC /* MultipartFormDataBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5386BE6AE97D057FCC750C0 /* MultipartFormDataBuilder.swift */; };
+		B5B52F8C75FE48D6765931FC /* AnnotationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C3629EF4DBFF03013D6A0E /* AnnotationEditorView.swift */; };
 		B8E779C0902A36C6BF786D68 /* ThumbnailGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */; };
 		C37E1BF69284D8E6E0CE913B /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 266E2ACD43AECEFBE16F104C /* ClipboardService.swift */; };
 		E16C24D8A26F3716C3E13608 /* HotkeyRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */; };
@@ -61,6 +66,7 @@
 		266E2ACD43AECEFBE16F104C /* ClipboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardService.swift; sourceTree = "<group>"; };
 		3B53C41A82477C390536133F /* FilenameGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilenameGenerator.swift; sourceTree = "<group>"; };
 		3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadRecord.swift; sourceTree = "<group>"; };
+		4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorController.swift; sourceTree = "<group>"; };
 		546AB298974720DBF85A6437 /* HotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyService.swift; sourceTree = "<group>"; };
 		549D293DAA0834A29769E500 /* ClipforgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipforgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentUploadsList.swift; sourceTree = "<group>"; };
@@ -73,7 +79,10 @@
 		7453427B8DA2BEC1F5D0E56F /* UploadClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadClientTests.swift; sourceTree = "<group>"; };
 		81AD97158435943DF5ECC0FA /* ToastPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPresenter.swift; sourceTree = "<group>"; };
 		8725181E9A1C5CD60054355F /* Clipforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E7EC18F26764720F1D27394 /* AnnotationCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationCanvasView.swift; sourceTree = "<group>"; };
+		A5F9954171CC7589782A6A14 /* AnnotationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationModels.swift; sourceTree = "<group>"; };
 		B8FA2F82775549FEA4F8C15C /* CapturedAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedAsset.swift; sourceTree = "<group>"; };
+		BC9C1E6FFB670D238DAEBDBF /* AnnotationEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorViewModel.swift; sourceTree = "<group>"; };
 		C33160FDE098A61A0A6339A6 /* CaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureService.swift; sourceTree = "<group>"; };
 		C3B701501D482F7307579318 /* DroppedImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroppedImageLoader.swift; sourceTree = "<group>"; };
 		C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -89,6 +98,7 @@
 		E5F5203F2A6018B20CA3FD9A /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
 		E7DFC7844B577785E81CB591 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		F5386BE6AE97D057FCC750C0 /* MultipartFormDataBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormDataBuilder.swift; sourceTree = "<group>"; };
+		F5C3629EF4DBFF03013D6A0E /* AnnotationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorView.swift; sourceTree = "<group>"; };
 		FA5506794905B9104D8C7278 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FDE6577605FE316B34BDC3F2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -177,6 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				D5A2382943BB77EC85192FD4 /* ClipforgeApp.swift */,
+				76DD58301B421B89B08FDBF1 /* Annotation */,
 				1C3CD9C2BBEB6A3671CD7CC7 /* App */,
 				C5C968A0066F526B31FDDC84 /* Capture */,
 				F0D9E6E9A95FBA714BB7B80C /* MenuBar */,
@@ -196,6 +207,18 @@
 				F64588CA9AB4D14A9918906C /* Utilities */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		76DD58301B421B89B08FDBF1 /* Annotation */ = {
+			isa = PBXGroup;
+			children = (
+				8E7EC18F26764720F1D27394 /* AnnotationCanvasView.swift */,
+				4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */,
+				F5C3629EF4DBFF03013D6A0E /* AnnotationEditorView.swift */,
+				BC9C1E6FFB670D238DAEBDBF /* AnnotationEditorViewModel.swift */,
+				A5F9954171CC7589782A6A14 /* AnnotationModels.swift */,
+			);
+			path = Annotation;
 			sourceTree = "<group>";
 		};
 		9A25D300C5D43F9E925C2305 = {
@@ -353,6 +376,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DCB99ACFD5CD79E7D0AC98C /* AnnotationCanvasView.swift in Sources */,
+				8E46158C71F3587A4A9CA3B4 /* AnnotationEditorController.swift in Sources */,
+				B5B52F8C75FE48D6765931FC /* AnnotationEditorView.swift in Sources */,
+				9823670CED8A4D435E45056C /* AnnotationEditorViewModel.swift in Sources */,
+				953BA25CFCA75211534CD27E /* AnnotationModels.swift in Sources */,
 				26BCC7EBB3395017E3808017 /* AppController.swift in Sources */,
 				1EF978DC26B1FF03B3F1B2B1 /* AppDelegate.swift in Sources */,
 				6DF76DE609E6943FEDD2334E /* AppSettings.swift in Sources */,

@@ -34,6 +34,12 @@ struct SettingsView: View {
                 Toggle("Copy uploaded content to the clipboard automatically", isOn: settings.binding(for: \.autoCopyLinkEnabled))
                     .disabled(settings.captureDestinationMode == .clipboardOnly)
 
+                Toggle("Open the annotation editor before delivery", isOn: settings.binding(for: \.annotationReviewEnabled))
+
+                Text("When enabled, Clipforge opens a quick review window after capture, clipboard upload, or drag-and-drop so you can add arrows, boxes, highlights, or pen marks before the image is copied or uploaded.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
                 Picker("Copied upload format", selection: settings.binding(for: \.uploadCopyFormat)) {
                     ForEach(AppSettings.UploadCopyFormat.allCases) { format in
                         Text(format.title).tag(format)

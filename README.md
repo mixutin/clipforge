@@ -27,6 +27,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Clipboard-only capture mode when you do not want to use a server
 - Drag-and-drop image uploads from Finder or other apps
 - Upload progress UI for larger uploads
+- Optional annotation review with arrows, boxes, highlights, and freehand pen markup
 - Local recent upload history
 - Thumbnail previews in recent uploads
 - Local-first settings

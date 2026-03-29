@@ -54,6 +54,7 @@ final class AppController: ObservableObject {
     private let uploadClient = UploadClient()
     private let clipboardService = ClipboardService.shared
     private let toastPresenter = ToastPresenter.shared
+    private let annotationEditorController = AnnotationEditorController()
     private let logger = Logger(subsystem: "com.clipforge.app", category: "App")
     private var hotkeyObserver: NSObjectProtocol?
 
@@ -274,15 +275,17 @@ final class AppController: ObservableObject {
     }
 
     private func deliver(asset: CapturedAsset, forceUpload: Bool = false) async throws {
-        let localSaveStatus = saveLocalCopyIfNeeded(asset: asset, settings: settingsStore.currentSettings)
+        guard let preparedAsset = try await prepareAssetForDelivery(asset) else { return }
+
+        let localSaveStatus = saveLocalCopyIfNeeded(asset: preparedAsset, settings: settingsStore.currentSettings)
 
         switch try resolveDeliveryDestination(forceUpload: forceUpload) {
         case .upload(let settings):
-            await uploadAndFinalize(asset: asset, settings: settings, localSaveStatus: localSaveStatus)
+            await uploadAndFinalize(asset: preparedAsset, settings: settings, localSaveStatus: localSaveStatus)
         case .clipboard:
             statusMessage = "Copying to clipboard…"
 
-            try clipboardService.copyImageAsset(asset)
+            try clipboardService.copyImageAsset(preparedAsset)
 
             let message: String
             if localSaveStatus.didFail {
@@ -296,6 +299,14 @@ final class AppController: ObservableObject {
                 message: message
             )
         }
+    }
+
+    private func prepareAssetForDelivery(_ asset: CapturedAsset) async throws -> CapturedAsset? {
+        guard settingsStore.annotationReviewEnabled else { return asset }
+
+        statusMessage = "Opening annotation editor…"
+        menuBarController?.closePopover()
+        return try await annotationEditorController.edit(asset: asset)
     }
 
     private func uploadAndFinalize(

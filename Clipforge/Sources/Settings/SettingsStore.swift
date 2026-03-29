@@ -9,6 +9,7 @@ final class SettingsStore: ObservableObject {
         static let serverURL = "settings.serverURL"
         static let legacyAPIToken = "settings.apiToken"
         static let autoCopy = "settings.autoCopy"
+        static let annotationReview = "settings.annotationReview"
         static let saveLocal = "settings.saveLocal"
         static let revealSavedFileAfterUpload = "settings.revealSavedFileAfterUpload"
         static let hasPresentedPermissionGuide = "settings.hasPresentedPermissionGuide"
@@ -30,6 +31,7 @@ final class SettingsStore: ObservableObject {
         defaults.register(defaults: [
             Keys.serverURL: AppSettings.default.serverURL,
             Keys.autoCopy: AppSettings.default.autoCopyLinkEnabled,
+            Keys.annotationReview: AppSettings.default.annotationReviewEnabled,
             Keys.saveLocal: AppSettings.default.saveLocalScreenshotEnabled,
             Keys.revealSavedFileAfterUpload: AppSettings.default.revealSavedFileAfterUploadEnabled,
             Keys.localFolder: AppSettings.default.localSaveFolder,
@@ -73,6 +75,14 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.autoCopy) }
         set {
             defaults.set(newValue, forKey: Keys.autoCopy)
+            objectWillChange.send()
+        }
+    }
+
+    var annotationReviewEnabled: Bool {
+        get { defaults.bool(forKey: Keys.annotationReview) }
+        set {
+            defaults.set(newValue, forKey: Keys.annotationReview)
             objectWillChange.send()
         }
     }
@@ -165,6 +175,7 @@ final class SettingsStore: ObservableObject {
             serverURL: serverURL,
             apiToken: apiToken,
             autoCopyLinkEnabled: autoCopyLinkEnabled,
+            annotationReviewEnabled: annotationReviewEnabled,
             saveLocalScreenshotEnabled: saveLocalScreenshotEnabled,
             revealSavedFileAfterUploadEnabled: revealSavedFileAfterUploadEnabled,
             localSaveFolder: localSaveFolder,

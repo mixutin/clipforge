@@ -100,6 +100,7 @@ final class UploadClientTests: XCTestCase {
             serverURL: "https://example.com",
             apiToken: "test-token",
             autoCopyLinkEnabled: true,
+            annotationReviewEnabled: false,
             saveLocalScreenshotEnabled: false,
             revealSavedFileAfterUploadEnabled: false,
             localSaveFolder: "/tmp",
