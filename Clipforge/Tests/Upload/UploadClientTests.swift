@@ -19,14 +19,19 @@ final class UploadClientTests: XCTestCase {
                 httpVersion: nil,
                 headerFields: ["Content-Type": "application/json"]
             )!
-            let data = Data(#"{"url":"https://example.com/uploads/test.png"}"#.utf8)
+            let data = Data(
+                #"{"url":"https://example.com/share/test.png","direct_url":"https://example.com/uploads/test.png","share_url":"https://example.com/share/test.png","media_kind":"image"}"#.utf8
+            )
             return (response, data)
         }
 
         let client = UploadClient(session: makeSession())
-        let url = try await client.upload(asset: sampleAsset(), settings: sampleSettings())
+        let result = try await client.upload(asset: sampleAsset(), settings: sampleSettings())
 
-        XCTAssertEqual(url.absoluteString, "https://example.com/uploads/test.png")
+        XCTAssertEqual(result.url.absoluteString, "https://example.com/share/test.png")
+        XCTAssertEqual(result.directURL?.absoluteString, "https://example.com/uploads/test.png")
+        XCTAssertEqual(result.shareURL?.absoluteString, "https://example.com/share/test.png")
+        XCTAssertEqual(result.mediaKind, "image")
     }
 
     func testUploadThrowsBadServerResponseForMalformedPayload() async {

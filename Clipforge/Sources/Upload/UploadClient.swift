@@ -2,6 +2,26 @@ import Foundation
 
 struct UploadResponse: Decodable, Sendable {
     let url: String
+    let directURL: String?
+    let shareURL: String?
+    let mediaKind: String?
+    let expiresAt: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case url
+        case directURL = "direct_url"
+        case shareURL = "share_url"
+        case mediaKind = "media_kind"
+        case expiresAt = "expires_at"
+    }
+}
+
+struct UploadResult: Sendable {
+    let url: URL
+    let directURL: URL?
+    let shareURL: URL?
+    let mediaKind: String?
+    let expiresAt: String?
 }
 
 struct UploadClient: Sendable {
@@ -17,7 +37,7 @@ struct UploadClient: Sendable {
         asset: CapturedAsset,
         settings: AppSettings,
         onProgress: ProgressHandler? = nil
-    ) async throws -> URL {
+    ) async throws -> UploadResult {
         let (request, body) = try makeUploadRequest(asset: asset, settings: settings)
 
         if onProgress == nil {
@@ -54,7 +74,7 @@ struct UploadClient: Sendable {
         return (request, body)
     }
 
-    private func uploadWithoutProgress(request: URLRequest, body: Data) async throws -> URL {
+    private func uploadWithoutProgress(request: URLRequest, body: Data) async throws -> UploadResult {
         var request = request
         request.httpBody = body
 
@@ -74,7 +94,7 @@ struct UploadClient: Sendable {
         request: URLRequest,
         body: Data,
         onProgress: ProgressHandler?
-    ) async throws -> URL {
+    ) async throws -> UploadResult {
         let delegate = UploadTaskDelegate(onProgress: onProgress)
         let progressSession = URLSession(
             configuration: session.configuration,
@@ -98,7 +118,7 @@ struct UploadClient: Sendable {
         }
     }
 
-    private func handleUploadResponse(data: Data, response: URLResponse) throws -> URL {
+    private func handleUploadResponse(data: Data, response: URLResponse) throws -> UploadResult {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ClipforgeError.badServerResponse
         }
@@ -110,7 +130,7 @@ struct UploadClient: Sendable {
         return try decodeUploadURL(from: data)
     }
 
-    private func decodeUploadURL(from data: Data) throws -> URL {
+    private func decodeUploadURL(from data: Data) throws -> UploadResult {
         guard
             let uploadResponse = try? JSONDecoder().decode(UploadResponse.self, from: data),
             let url = URL(string: uploadResponse.url)
@@ -118,7 +138,13 @@ struct UploadClient: Sendable {
             throw ClipforgeError.badServerResponse
         }
 
-        return url
+        return UploadResult(
+            url: url,
+            directURL: uploadResponse.directURL.flatMap(URL.init(string:)),
+            shareURL: uploadResponse.shareURL.flatMap(URL.init(string:)),
+            mediaKind: uploadResponse.mediaKind,
+            expiresAt: uploadResponse.expiresAt
+        )
     }
 
     private func mapNetworkError(_ error: URLError) -> ClipforgeError {

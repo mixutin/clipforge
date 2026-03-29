@@ -16,6 +16,7 @@ Clipforge Server is designed to be easy to run on a small VPS, homelab box, or l
 - terminate TLS at the proxy
 - expose only HTTPS publicly
 - keep uploads on durable storage
+- enable signed or expiring public links if you do not want permanent anonymous URLs
 - rotate the API token if it is leaked
 
 ## Example Reverse Proxy Notes
@@ -26,9 +27,12 @@ For internet-facing deployments, the proxy should:
 - forward `POST /upload`
 - forward `GET /health`
 - forward `GET /uploads/*`
+- forward `GET /share/*`
 
 ## Operational Notes
 
 - the current rate limiter is in-memory and per-process
-- the upload directory is local disk storage only
+- storage can be local disk or an S3-compatible bucket
+- image uploads can optionally be resized, optimized, or converted to WebP before they are stored
+- public links can be open, signed, or signed with expiry timestamps
 - the API is intentionally small and stable for MVP use

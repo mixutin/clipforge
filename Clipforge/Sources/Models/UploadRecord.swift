@@ -9,6 +9,8 @@ struct UploadRecord: Codable, Identifiable, Equatable, Sendable {
     let id: UUID
     let localFilename: String
     let remoteURL: String
+    let directURL: String?
+    let shareURL: String?
     let thumbnailPNGData: Data?
     let mediaKind: MediaKind
     let recognizedText: String?
@@ -18,6 +20,8 @@ struct UploadRecord: Codable, Identifiable, Equatable, Sendable {
         id: UUID = UUID(),
         localFilename: String,
         remoteURL: String,
+        directURL: String? = nil,
+        shareURL: String? = nil,
         thumbnailPNGData: Data? = nil,
         mediaKind: MediaKind = .image,
         recognizedText: String? = nil,
@@ -26,6 +30,8 @@ struct UploadRecord: Codable, Identifiable, Equatable, Sendable {
         self.id = id
         self.localFilename = localFilename
         self.remoteURL = remoteURL
+        self.directURL = directURL
+        self.shareURL = shareURL
         self.thumbnailPNGData = thumbnailPNGData
         self.mediaKind = mediaKind
         self.recognizedText = recognizedText
@@ -40,6 +46,8 @@ struct UploadRecord: Codable, Identifiable, Equatable, Sendable {
         case id
         case localFilename
         case remoteURL
+        case directURL
+        case shareURL
         case thumbnailPNGData
         case mediaKind
         case recognizedText
@@ -51,6 +59,8 @@ struct UploadRecord: Codable, Identifiable, Equatable, Sendable {
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         localFilename = try container.decode(String.self, forKey: .localFilename)
         remoteURL = try container.decode(String.self, forKey: .remoteURL)
+        directURL = try container.decodeIfPresent(String.self, forKey: .directURL)
+        shareURL = try container.decodeIfPresent(String.self, forKey: .shareURL)
         thumbnailPNGData = try container.decodeIfPresent(Data.self, forKey: .thumbnailPNGData)
         mediaKind = try container.decodeIfPresent(MediaKind.self, forKey: .mediaKind) ?? .image
         recognizedText = try container.decodeIfPresent(String.self, forKey: .recognizedText)

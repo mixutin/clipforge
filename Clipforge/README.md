@@ -20,7 +20,7 @@ Clipforge is a native macOS menu bar capture uploader that captures with ScreenC
 - Richer filename styles with built-in presets and custom placeholders
 - Bearer-token authenticated multipart uploads
 - Multiple named server profiles with per-profile Keychain token storage
-- Configurable URL, Markdown, or HTML copy formats for uploads
+- Configurable URL, Markdown, HTML, Slack, and Discord-friendly copy formats for uploads
 - Upload progress UI in the menu bar popover
 - Searchable upload history window with copy and open actions
 - Optional annotation editor before upload or clipboard copy

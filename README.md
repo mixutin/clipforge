@@ -27,6 +27,7 @@ Press a global hotkey, capture part of the screen, upload it to your own server,
 - Keychain-backed API token storage
 - Multiple named server profiles in the macOS app
 - Automatic clipboard copy of uploaded URLs, Markdown, or HTML image tags
+- Slack mrkdwn and Discord-friendly quick-share copy formats
 - Configurable post-upload quick actions
 - Clipboard-only capture mode when you do not want to use a server
 - Drag-and-drop image uploads from Finder or other apps
@@ -44,6 +45,9 @@ Press a global hotkey, capture part of the screen, upload it to your own server,
 - Backend support for image and short video uploads
 - Token-authenticated backend delete endpoint for removing uploads
 - Optional Open Graph share pages for cleaner Discord-style embeds
+- Optional signed or expiring public links
+- Optional server-side image optimization, resizing, and WebP conversion
+- Optional S3-compatible object storage for backend uploads
 - Optional Developer ID signing and notarization in the release workflow
 - Permissive open-source licensing
 
@@ -109,6 +113,7 @@ The app also supports OCR-assisted copy actions, scroll capture for longer pages
 - [Agent Guide](./AGENTS.md)
 - [Architecture](./docs/architecture.md)
 - [Self-Hosting Guide](./docs/self-hosting.md)
+- [Install Guide](./docs/install.md)
 - [Project TODO](./TODO.md)
 - [Release Guide](./docs/releases.md)
 - [Contributing](./CONTRIBUTING.md)

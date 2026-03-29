@@ -89,6 +89,28 @@ final class FilenameGeneratorTests: XCTestCase {
         )
     }
 
+    func testSlackUploadCopyFormatUsesShareURLAndSlackSyntax() {
+        let result = AppSettings.UploadCopyFormat.slackMrkdwn.formattedString(
+            remoteURL: "https://example.com/uploads/clipforge-test.png",
+            directURL: "https://example.com/uploads/clipforge-test.png",
+            shareURL: "https://example.com/share/clipforge-test",
+            localFilename: "clipforge-test.png"
+        )
+
+        XCTAssertEqual(result, "<https://example.com/share/clipforge-test|clipforge-test>")
+    }
+
+    func testDiscordUploadCopyFormatPrefersShareURL() {
+        let result = AppSettings.UploadCopyFormat.discordEmbedLink.formattedString(
+            remoteURL: "https://example.com/uploads/clipforge-test.png",
+            directURL: "https://example.com/uploads/clipforge-test.png",
+            shareURL: "https://example.com/share/clipforge-test",
+            localFilename: "clipforge-test.png"
+        )
+
+        XCTAssertEqual(result, "https://example.com/share/clipforge-test")
+    }
+
     func testAutomaticImageFormatUsesPNGForTransparentImages() throws {
         let asset = try CapturedAsset.from(
             nsImage: sampleImage(includeTransparency: true),

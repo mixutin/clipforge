@@ -58,6 +58,8 @@ The `Release` workflow then publishes:
 - a `.dmg` installer
 - the Sparkle `appcast.xml` feed on GitHub Pages
 
+After a release is published, update the Homebrew cask in `packaging/homebrew/clipforge.rb` with the new version and `.dmg` SHA-256 so the install docs stay current.
+
 ## Feed URL
 
 Clipforge reads updates from:

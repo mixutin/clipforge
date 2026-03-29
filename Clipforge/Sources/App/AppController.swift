@@ -189,6 +189,8 @@ final class AppController: ObservableObject {
     func copyUploadContent(_ record: UploadRecord) {
         let copiedContent = formattedUploadContent(
             remoteURLString: record.remoteURL,
+            directURLString: record.directURL,
+            shareURLString: record.shareURL,
             localFilename: record.localFilename
         )
         let copyFormat = settingsStore.uploadCopyFormat
@@ -441,7 +443,7 @@ final class AppController: ObservableObject {
         isManualRetry: Bool = false
     ) async {
         do {
-            let remoteURL = try await performUploadWithRetry(
+            let uploadResult = try await performUploadWithRetry(
                 asset: asset,
                 settings: settings,
                 isManualRetry: isManualRetry
@@ -449,7 +451,7 @@ final class AppController: ObservableObject {
             let recognizedText = await recognizedTextIfAvailable(for: asset)
             let revealedLocalFile = revealLocalFileIfNeeded(localSaveStatus: localSaveStatus, settings: settings)
             let successAction = successToastAction(
-                for: remoteURL,
+                for: uploadResult,
                 localFilename: asset.filename,
                 localSaveStatus: localSaveStatus,
                 settings: settings
@@ -459,7 +461,9 @@ final class AppController: ObservableObject {
             if settings.autoCopyLinkEnabled {
                 clipboardService.copyString(
                     formattedUploadContent(
-                        remoteURLString: remoteURL.absoluteString,
+                        remoteURLString: uploadResult.url.absoluteString,
+                        directURLString: uploadResult.directURL?.absoluteString,
+                        shareURLString: uploadResult.shareURL?.absoluteString,
                         localFilename: asset.filename,
                         copyFormat: settings.uploadCopyFormat
                     )
@@ -468,7 +472,9 @@ final class AppController: ObservableObject {
 
             let record = UploadRecord(
                 localFilename: asset.filename,
-                remoteURL: remoteURL.absoluteString,
+                remoteURL: uploadResult.url.absoluteString,
+                directURL: uploadResult.directURL?.absoluteString,
+                shareURL: uploadResult.shareURL?.absoluteString,
                 thumbnailPNGData: asset.thumbnailPNGData,
                 mediaKind: asset.isVideo ? .video : .image,
                 recognizedText: recognizedText,
@@ -511,7 +517,7 @@ final class AppController: ObservableObject {
         asset: CapturedAsset,
         settings: AppSettings,
         isManualRetry: Bool
-    ) async throws -> URL {
+    ) async throws -> UploadResult {
         uploadProgress = nil
 
         for attempt in 1...Self.maxUploadAttempts {
@@ -602,7 +608,7 @@ final class AppController: ObservableObject {
     }
 
     private func successToastAction(
-        for remoteURL: URL,
+        for uploadResult: UploadResult,
         localFilename: String,
         localSaveStatus: LocalSaveStatus,
         settings: AppSettings
@@ -614,7 +620,9 @@ final class AppController: ObservableObject {
                 handler: { [weak self] in
                     guard let self else { return }
                     let copiedContent = self.formattedUploadContent(
-                        remoteURLString: remoteURL.absoluteString,
+                        remoteURLString: uploadResult.url.absoluteString,
+                        directURLString: uploadResult.directURL?.absoluteString,
+                        shareURLString: uploadResult.shareURL?.absoluteString,
                         localFilename: localFilename,
                         copyFormat: settings.uploadCopyFormat
                     )
@@ -629,7 +637,7 @@ final class AppController: ObservableObject {
             return SuccessToastAction(
                 title: "Open",
                 handler: {
-                    NSWorkspace.shared.open(remoteURL)
+                    NSWorkspace.shared.open(uploadResult.url)
                 }
             )
         case .revealLocalFile:
@@ -675,11 +683,18 @@ final class AppController: ObservableObject {
 
     private func formattedUploadContent(
         remoteURLString: String,
+        directURLString: String? = nil,
+        shareURLString: String? = nil,
         localFilename: String,
         copyFormat: AppSettings.UploadCopyFormat? = nil
     ) -> String {
         let format = copyFormat ?? settingsStore.uploadCopyFormat
-        return format.formattedString(remoteURL: remoteURLString, localFilename: localFilename)
+        return format.formattedString(
+            remoteURL: remoteURLString,
+            directURL: directURLString,
+            shareURL: shareURLString,
+            localFilename: localFilename
+        )
     }
 
     private func handleUploadFailure(

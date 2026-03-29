@@ -12,6 +12,11 @@ The list is intentionally opinionated:
 
 ## Recently Completed
 
+- [x] Add optional signed or expiring public links
+- [x] Add image optimization and automatic format conversion on the server
+- [x] Add S3-compatible storage support for the backend
+- [x] Quick share destinations after upload, such as Slack paste format or Discord embed-ready markdown
+- [x] Add installation docs for Homebrew and standalone `.dmg` distribution
 - [x] Add scroll capture for long pages
 - [x] Add short screen recording upload support
 - [x] Add OCR on captured images with a copy-recognized-text action
@@ -46,9 +51,6 @@ The list is intentionally opinionated:
 
 ## Later
 
-- [ ] Add image optimization and automatic format conversion on the server
-- [ ] Add optional signed or expiring public links
-- [ ] Add S3-compatible storage support for the backend
 - [ ] Add optional SQLite metadata storage for uploads
 - [ ] Add rate limiting backed by Redis or reverse proxy rules
 - [ ] Add a minimal admin page for server health and upload visibility
@@ -59,13 +61,11 @@ The list is intentionally opinionated:
 - [ ] Add a changelog and release process doc
 - [ ] Add conventional issue labels and milestone planning
 - [ ] Add a small test fixture set for backend upload cases
-- [ ] Add installation docs for Homebrew and standalone `.dmg` distribution
 - [ ] Add a contributor-friendly local dev script for booting server and app-side prerequisites
 - [ ] Add architecture decision records for major future changes
 
 ## Nice Product Ideas
 
-- [ ] Quick share destinations after upload, such as Slack paste format or Discord embed-ready markdown
 - [ ] QR code popup for opening the uploaded image on another device
 - [ ] Temporary private uploads with one-click reveal links
 - [ ] Per-project settings profiles tied to different servers or folders

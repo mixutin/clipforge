@@ -24,6 +24,8 @@ enum UploadHistoryFilter {
         return normalized([
             item.localFilename,
             item.remoteURL,
+            item.directURL ?? "",
+            item.shareURL ?? "",
             dateText,
             isoText
         ].joined(separator: " "))

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-import secrets
+from dataclasses import dataclass
+import io
 from pathlib import Path
-from urllib.parse import quote
+import secrets
 
 from fastapi import UploadFile
+from PIL import Image, ImageOps, UnidentifiedImageError
+
+from ..config import Settings
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 VIDEO_EXTENSIONS = {".mp4", ".mov"}
@@ -17,6 +21,15 @@ ALLOWED_CONTENT_TYPES = {
     "video/quicktime": {".mov"},
 }
 CHUNK_SIZE = 1024 * 1024
+
+
+@dataclass(frozen=True)
+class PreparedUpload:
+    filename: str
+    data: bytes
+    content_type: str
+    media_kind: str
+    total_bytes: int
 
 
 class FileValidationError(ValueError):
@@ -39,7 +52,7 @@ def validate_file_signature(header_bytes: bytes, extension: str) -> None:
     if extension == ".png" and header_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
         return
 
-    if extension == ".jpg" and header_bytes.startswith(b"\xff\xd8\xff"):
+    if extension in {".jpg", ".jpeg"} and header_bytes.startswith(b"\xff\xd8\xff"):
         return
 
     if extension == ".webp" and header_bytes.startswith(b"RIFF") and header_bytes[8:12] == b"WEBP":
@@ -54,7 +67,7 @@ def validate_file_signature(header_bytes: bytes, extension: str) -> None:
     raise FileValidationError("The uploaded file contents do not match a supported Clipforge upload format.")
 
 
-def validate_image_type(filename: str | None, content_type: str | None) -> str:
+def validate_upload_type(filename: str | None, content_type: str | None) -> str:
     if not content_type or content_type not in ALLOWED_CONTENT_TYPES:
         raise FileValidationError("Only PNG, JPG, JPEG, WEBP, MP4, and MOV uploads are supported.")
 
@@ -71,68 +84,219 @@ def validate_image_type(filename: str | None, content_type: str | None) -> str:
     return ".jpg" if extension == ".jpeg" else extension
 
 
-async def save_upload_file(
-    upload_file: UploadFile,
-    destination_dir: Path,
-    max_upload_bytes: int,
-) -> tuple[str, int]:
-    extension = validate_image_type(upload_file.filename, upload_file.content_type)
-    generated_name = f"{secrets.token_hex(16)}{extension}"
-    temporary_path = destination_dir / f".{generated_name}.part"
-    final_path = destination_dir / generated_name
+async def prepare_upload_file(upload_file: UploadFile, settings: Settings) -> PreparedUpload:
+    original_extension = validate_upload_type(upload_file.filename, upload_file.content_type)
+    original_bytes = await read_upload_bytes(upload_file, settings.max_upload_bytes)
+    validate_file_signature(original_bytes[:16], original_extension)
 
+    media_kind = detect_media_kind_for_extension(original_extension)
+    if media_kind == "video":
+        return PreparedUpload(
+            filename=generate_storage_filename(original_extension),
+            data=original_bytes,
+            content_type=guess_content_type_for_extension(original_extension),
+            media_kind=media_kind,
+            total_bytes=len(original_bytes),
+        )
+
+    processed_extension, processed_content_type, processed_bytes = optimize_image_bytes(
+        original_bytes=original_bytes,
+        original_extension=original_extension,
+        settings=settings,
+    )
+    return PreparedUpload(
+        filename=generate_storage_filename(processed_extension),
+        data=processed_bytes,
+        content_type=processed_content_type,
+        media_kind="image",
+        total_bytes=len(processed_bytes),
+    )
+
+
+async def read_upload_bytes(upload_file: UploadFile, max_upload_bytes: int) -> bytes:
     total_bytes = 0
-    header_bytes = bytearray()
+    buffer = bytearray()
 
     try:
-        with temporary_path.open("wb") as file_handle:
-            while chunk := await upload_file.read(CHUNK_SIZE):
-                total_bytes += len(chunk)
-                if total_bytes > max_upload_bytes:
-                    raise FileTooLargeError(
-                        f"Upload exceeds the {max_upload_bytes // (1024 * 1024)} MB limit."
-                    )
-
-                if len(header_bytes) < 16:
-                    remaining = 16 - len(header_bytes)
-                    header_bytes.extend(chunk[:remaining])
-
-                file_handle.write(chunk)
-
-        if total_bytes == 0:
-            raise FileValidationError("Empty uploads are not allowed.")
-
-        validate_file_signature(bytes(header_bytes), extension)
-        temporary_path.replace(final_path)
-    except Exception:
-        temporary_path.unlink(missing_ok=True)
-        raise
+        while chunk := await upload_file.read(CHUNK_SIZE):
+            total_bytes += len(chunk)
+            if total_bytes > max_upload_bytes:
+                raise FileTooLargeError(
+                    f"Upload exceeds the {max_upload_bytes // (1024 * 1024)} MB limit."
+                )
+            buffer.extend(chunk)
     finally:
         await upload_file.close()
 
-    return generated_name, total_bytes
+    if total_bytes == 0:
+        raise FileValidationError("Empty uploads are not allowed.")
+
+    return bytes(buffer)
 
 
-def delete_upload_file(filename: str, destination_dir: Path) -> str:
-    safe_filename = normalize_upload_filename(filename)
-    file_path = destination_dir / safe_filename
+def optimize_image_bytes(
+    *,
+    original_bytes: bytes,
+    original_extension: str,
+    settings: Settings,
+) -> tuple[str, str, bytes]:
+    try:
+        with Image.open(io.BytesIO(original_bytes)) as opened_image:
+            image = ImageOps.exif_transpose(opened_image)
+            image.load()
+    except (UnidentifiedImageError, OSError) as exc:
+        raise FileValidationError("The uploaded file contents do not match a supported Clipforge upload format.") from exc
 
-    if file_path.is_file() is False:
-        raise FileNotFoundError(safe_filename)
+    if settings.image_max_dimension > 0:
+        image.thumbnail((settings.image_max_dimension, settings.image_max_dimension), Image.Resampling.LANCZOS)
 
-    file_path.unlink()
-    return safe_filename
+    output_mode = settings.image_output_mode
+    if output_mode == "webp":
+        return (
+            ".webp",
+            "image/webp",
+            save_image_bytes(
+                image=image,
+                format_name="WEBP",
+                quality=settings.image_webp_quality,
+                optimize=True,
+            ),
+        )
+
+    if output_mode == "optimized":
+        if image_has_alpha(image):
+            return (
+                ".png",
+                "image/png",
+                save_image_bytes(image=image, format_name="PNG", optimize=True),
+            )
+
+        return (
+            ".jpg",
+            "image/jpeg",
+            save_image_bytes(
+                image=flatten_image_if_needed(image),
+                format_name="JPEG",
+                quality=settings.image_jpeg_quality,
+                optimize=True,
+                progressive=True,
+            ),
+        )
+
+    return encode_original_image(
+        image=image,
+        original_extension=original_extension,
+        settings=settings,
+    )
 
 
-def build_public_url(base_url: str, filename: str) -> str:
-    return f"{base_url}/uploads/{quote(filename)}"
+def encode_original_image(
+    *,
+    image: Image.Image,
+    original_extension: str,
+    settings: Settings,
+) -> tuple[str, str, bytes]:
+    normalized_extension = ".jpg" if original_extension == ".jpeg" else original_extension
+    if normalized_extension == ".png":
+        return (
+            ".png",
+            "image/png",
+            save_image_bytes(image=image, format_name="PNG", optimize=True),
+        )
+
+    if normalized_extension == ".webp":
+        return (
+            ".webp",
+            "image/webp",
+            save_image_bytes(
+                image=image,
+                format_name="WEBP",
+                quality=settings.image_webp_quality,
+                optimize=True,
+            ),
+        )
+
+    return (
+        ".jpg",
+        "image/jpeg",
+        save_image_bytes(
+            image=flatten_image_if_needed(image),
+            format_name="JPEG",
+            quality=settings.image_jpeg_quality,
+            optimize=True,
+            progressive=True,
+        ),
+    )
+
+
+def save_image_bytes(
+    *,
+    image: Image.Image,
+    format_name: str,
+    quality: int | None = None,
+    optimize: bool = False,
+    progressive: bool = False,
+) -> bytes:
+    output = io.BytesIO()
+    save_kwargs: dict[str, object] = {
+        "format": format_name,
+        "optimize": optimize,
+    }
+    if quality is not None:
+        save_kwargs["quality"] = quality
+    if progressive:
+        save_kwargs["progressive"] = True
+
+    image.save(output, **save_kwargs)
+    return output.getvalue()
+
+
+def flatten_image_if_needed(image: Image.Image) -> Image.Image:
+    if image_has_alpha(image) is False:
+        return image.convert("RGB")
+
+    background = Image.new("RGBA", image.size, (255, 255, 255, 255))
+    background.alpha_composite(image.convert("RGBA"))
+    return background.convert("RGB")
+
+
+def image_has_alpha(image: Image.Image) -> bool:
+    if image.mode in {"RGBA", "LA"}:
+        return True
+
+    transparency = image.info.get("transparency")
+    return transparency is not None
+
+
+def generate_storage_filename(extension: str) -> str:
+    return f"{secrets.token_hex(16)}{extension}"
 
 
 def detect_media_kind(filename: str) -> str:
     extension = Path(filename).suffix.lower()
+    return detect_media_kind_for_extension(extension)
+
+
+def detect_media_kind_for_extension(extension: str) -> str:
     if extension in VIDEO_EXTENSIONS:
         return "video"
     return "image"
+
+
+def guess_content_type(filename: str) -> str:
+    return guess_content_type_for_extension(Path(filename).suffix.lower())
+
+
+def guess_content_type_for_extension(extension: str) -> str:
+    if extension == ".png":
+        return "image/png"
+    if extension in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if extension == ".webp":
+        return "image/webp"
+    if extension == ".mov":
+        return "video/quicktime"
+    return "video/mp4"
 
 
 def _looks_like_iso_media_file(header_bytes: bytes, allowed_brands: set[bytes] | None) -> bool:

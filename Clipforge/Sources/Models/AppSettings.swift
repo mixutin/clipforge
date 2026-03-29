@@ -130,6 +130,8 @@ struct AppSettings: Sendable {
         case url
         case markdownImage
         case htmlImageTag
+        case slackMrkdwn
+        case discordEmbedLink
 
         var id: Self { self }
 
@@ -141,6 +143,10 @@ struct AppSettings: Sendable {
                 return "Markdown Image"
             case .htmlImageTag:
                 return "HTML Image Tag"
+            case .slackMrkdwn:
+                return "Slack Mrkdwn"
+            case .discordEmbedLink:
+                return "Discord Embed Link"
             }
         }
 
@@ -149,9 +155,13 @@ struct AppSettings: Sendable {
             case .url:
                 return "Copy the plain uploaded URL."
             case .markdownImage:
-                return "Copy a Markdown image snippet like `![Alt](<url>)`."
+                return "Copy a Markdown image snippet using the direct media URL when available."
             case .htmlImageTag:
-                return "Copy an HTML image tag like `<img src=\"...\" alt=\"...\" />`."
+                return "Copy an HTML image tag using the direct media URL when available."
+            case .slackMrkdwn:
+                return "Copy a Slack mrkdwn link like `<url|label>` for quick pasting into Slack."
+            case .discordEmbedLink:
+                return "Copy the Clipforge share URL when available so Discord can build a richer embed."
             }
         }
 
@@ -163,6 +173,10 @@ struct AppSettings: Sendable {
                 return "Markdown image copied"
             case .htmlImageTag:
                 return "HTML image copied"
+            case .slackMrkdwn:
+                return "Slack share copied"
+            case .discordEmbedLink:
+                return "Discord link copied"
             }
         }
 
@@ -174,6 +188,10 @@ struct AppSettings: Sendable {
                 return "Copy Markdown"
             case .htmlImageTag:
                 return "Copy HTML"
+            case .slackMrkdwn:
+                return "Copy Slack"
+            case .discordEmbedLink:
+                return "Copy Discord Link"
             }
         }
 
@@ -185,6 +203,10 @@ struct AppSettings: Sendable {
                 return "Copy Markdown"
             case .htmlImageTag:
                 return "Copy HTML"
+            case .slackMrkdwn:
+                return "Copy Slack"
+            case .discordEmbedLink:
+                return "Copy Discord"
             }
         }
 
@@ -196,6 +218,10 @@ struct AppSettings: Sendable {
                 return "Markdown image link"
             case .htmlImageTag:
                 return "HTML image tag"
+            case .slackMrkdwn:
+                return "Slack mrkdwn share link"
+            case .discordEmbedLink:
+                return "Discord embed link"
             }
         }
 
@@ -207,6 +233,10 @@ struct AppSettings: Sendable {
                 return "Markdown image link copied to your clipboard."
             case .htmlImageTag:
                 return "HTML image tag copied to your clipboard."
+            case .slackMrkdwn:
+                return "Slack mrkdwn link copied to your clipboard."
+            case .discordEmbedLink:
+                return "Discord-ready link copied to your clipboard."
             }
         }
 
@@ -218,22 +248,39 @@ struct AppSettings: Sendable {
                 return "Markdown image link copied and local file revealed in Finder."
             case .htmlImageTag:
                 return "HTML image tag copied and local file revealed in Finder."
+            case .slackMrkdwn:
+                return "Slack mrkdwn link copied and local file revealed in Finder."
+            case .discordEmbedLink:
+                return "Discord-ready link copied and local file revealed in Finder."
             }
         }
 
-        func formattedString(remoteURL: String, localFilename: String) -> String {
+        func formattedString(
+            remoteURL: String,
+            directURL: String? = nil,
+            shareURL: String? = nil,
+            localFilename: String
+        ) -> String {
             let altText = Self.altText(from: localFilename)
+            let directMediaURL = directURL ?? remoteURL
+            let shareableURL = shareURL ?? remoteURL
 
             switch self {
             case .url:
                 return remoteURL
             case .markdownImage:
                 let escapedAltText = Self.escapeMarkdownAltText(altText)
-                return "![\(escapedAltText)](<\(remoteURL)>)"
+                return "![\(escapedAltText)](<\(directMediaURL)>)"
             case .htmlImageTag:
-                let escapedURL = Self.escapeHTMLAttribute(remoteURL)
+                let escapedURL = Self.escapeHTMLAttribute(directMediaURL)
                 let escapedAltText = Self.escapeHTMLAttribute(altText)
                 return "<img src=\"\(escapedURL)\" alt=\"\(escapedAltText)\" />"
+            case .slackMrkdwn:
+                let escapedURL = Self.escapeSlackValue(shareableURL)
+                let escapedAltText = Self.escapeSlackValue(altText)
+                return "<\(escapedURL)|\(escapedAltText)>"
+            case .discordEmbedLink:
+                return shareableURL
             }
         }
 
@@ -258,6 +305,13 @@ struct AppSettings: Sendable {
                 .replacingOccurrences(of: "\"", with: "&quot;")
                 .replacingOccurrences(of: "<", with: "&lt;")
                 .replacingOccurrences(of: ">", with: "&gt;")
+        }
+
+        private static func escapeSlackValue(_ value: String) -> String {
+            value
+                .replacingOccurrences(of: "|", with: " ")
+                .replacingOccurrences(of: ">", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 
