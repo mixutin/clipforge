@@ -23,6 +23,14 @@ class FileTooLargeError(ValueError):
     pass
 
 
+def normalize_upload_filename(filename: str) -> str:
+    safe_filename = Path(filename).name
+    if safe_filename != filename or safe_filename in {"", ".", ".."}:
+        raise FileValidationError("Invalid upload filename.")
+
+    return safe_filename
+
+
 def validate_file_signature(header_bytes: bytes, extension: str) -> None:
     if extension == ".png" and header_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
         return
@@ -93,6 +101,17 @@ async def save_upload_file(
         await upload_file.close()
 
     return generated_name, total_bytes
+
+
+def delete_upload_file(filename: str, destination_dir: Path) -> str:
+    safe_filename = normalize_upload_filename(filename)
+    file_path = destination_dir / safe_filename
+
+    if file_path.is_file() is False:
+        raise FileNotFoundError(safe_filename)
+
+    file_path.unlink()
+    return safe_filename
 
 
 def build_public_url(base_url: str, filename: str) -> str:

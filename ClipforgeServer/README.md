@@ -6,6 +6,7 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 
 - `GET /health`
 - `POST /upload`
+- `DELETE /upload/<filename>`
 - `GET /uploads/<filename>`
 - `GET /share/<filename>`
 
@@ -59,6 +60,7 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 ## Notes
 
 - Uploads are stored on local disk in `uploads/`
+- Uploads can be deleted again through `DELETE /upload/<filename>` with the same bearer token auth
 - Files are served statically from `/uploads`
 - Optional share pages are served from `/share/<filename>` and are useful for Discord-style rich embeds
 - CORS is disabled by default unless `CLIPFORGE_CORS_ALLOW_ORIGINS` is set

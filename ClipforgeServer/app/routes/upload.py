@@ -13,6 +13,8 @@ from ..utils.files import (
     FileTooLargeError,
     FileValidationError,
     build_public_url,
+    delete_upload_file,
+    normalize_upload_filename,
     save_upload_file,
 )
 from ..utils.share import (
@@ -67,14 +69,41 @@ async def upload_image(
     }
 
 
+@router.delete("/upload/{filename}")
+async def delete_image(
+    filename: str,
+    request: Request,
+    _: None = Depends(require_bearer_token),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, str]:
+    client_ip = request.client.host if request.client else "unknown"
+
+    try:
+        deleted_filename = delete_upload_file(filename, settings.upload_dir)
+    except FileValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.") from exc
+    except OSError as exc:
+        logger.exception("Could not delete upload %s from %s", filename, client_ip)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not delete uploaded file.",
+        ) from exc
+
+    logger.info("Deleted %s from %s", deleted_filename, client_ip)
+    return {"filename": deleted_filename, "status": "deleted"}
+
+
 @router.get("/share/{filename}", response_class=HTMLResponse, response_model=None)
 async def share_image(
     filename: str,
     settings: Settings = Depends(get_settings),
 ) -> Response:
-    safe_filename = Path(filename).name
-    if safe_filename != filename:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.")
+    try:
+        safe_filename = normalize_upload_filename(filename)
+    except FileValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.") from exc
 
     file_path = settings.upload_dir / safe_filename
     if file_path.is_file() is False:

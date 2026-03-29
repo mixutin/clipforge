@@ -3,6 +3,7 @@ from __future__ import annotations
 from base64 import b64decode
 from pathlib import Path
 import sys
+from urllib.parse import urlparse
 
 import pytest
 from fastapi.testclient import TestClient
@@ -107,3 +108,56 @@ def test_upload_rejects_oversized_files(client: TestClient, tmp_path: Path) -> N
     assert response.status_code == 413
     assert response.json() == {"detail": "Upload exceeds the 1 MB limit."}
     assert list((tmp_path / "uploads").glob("*")) == []
+
+
+def test_delete_requires_bearer_token(client: TestClient) -> None:
+    response = client.delete("/upload/example.png")
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Missing bearer token."}
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_delete_rejects_invalid_filename(client: TestClient) -> None:
+    response = client.delete(
+        "/upload/../example.png",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not Found"}
+
+
+def test_delete_removes_uploaded_file(client: TestClient, tmp_path: Path) -> None:
+    upload_response = client.post(
+        "/upload",
+        headers={"Authorization": "Bearer test-token"},
+        files={"file": ("capture.png", PNG_BYTES, "image/png")},
+    )
+    assert upload_response.status_code == 201
+
+    uploaded_filename = Path(urlparse(upload_response.json()["direct_url"]).path).name
+    uploaded_path = tmp_path / "uploads" / uploaded_filename
+    assert uploaded_path.exists()
+
+    delete_response = client.delete(
+        f"/upload/{uploaded_filename}",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {
+        "filename": uploaded_filename,
+        "status": "deleted",
+    }
+    assert uploaded_path.exists() is False
+
+
+def test_delete_returns_not_found_for_missing_upload(client: TestClient) -> None:
+    response = client.delete(
+        "/upload/missing-file.png",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Upload not found."}

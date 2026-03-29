@@ -37,6 +37,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Local-first settings
 - Sparkle-powered in-app update checks
 - Self-hosted backend with local disk storage
+- Token-authenticated backend delete endpoint for removing uploads
 - Optional Open Graph share pages for cleaner Discord-style embeds
 - Permissive open-source licensing
 
