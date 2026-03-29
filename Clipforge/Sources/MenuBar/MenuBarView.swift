@@ -5,6 +5,7 @@ struct MenuBarView: View {
     @EnvironmentObject private var appController: AppController
     @EnvironmentObject private var updaterController: UpdaterController
     @ObservedObject private var settings = SettingsStore.shared
+    @ObservedObject private var clipboardMonitor = ClipboardMonitor.shared
     @State private var isDropTargeted = false
 
     var body: some View {
@@ -38,13 +39,14 @@ struct MenuBarView: View {
                 }
 
                 actionButton(
-                    title: "Upload Clipboard Image",
-                    subtitle: "Send the current clipboard image to your configured server",
+                    title: "Paste Clipboard Image",
+                    subtitle: pasteClipboardSubtitle,
                     icon: "doc.on.clipboard"
                 ) {
                     appController.uploadClipboardImage()
                 }
-                .disabled(appController.isBusy || !appController.canUploadClipboardImage)
+                .keyboardShortcut("v", modifiers: [.command])
+                .disabled(appController.isBusy || !appController.canUploadClipboardImage || !clipboardMonitor.hasUploadableImage)
             }
 
             if appController.isBusy {
@@ -83,6 +85,12 @@ struct MenuBarView: View {
         .padding(16)
         .frame(width: 380)
         .background(.regularMaterial)
+        .onAppear {
+            clipboardMonitor.start()
+        }
+        .onDisappear {
+            clipboardMonitor.stop()
+        }
         .onDrop(of: dropTypeIdentifiers, isTargeted: $isDropTargeted) { providers in
             guard appController.isBusy == false else {
                 return false
@@ -154,6 +162,18 @@ struct MenuBarView: View {
                 ? "Capture the frontmost app window and upload it"
                 : "Capture the frontmost app window and copy it to the clipboard"
         }
+    }
+
+    private var pasteClipboardSubtitle: String {
+        guard settings.hasReadyUploadConfiguration else {
+            return "Set up a server first, then copy an image and press Command-V to upload it."
+        }
+
+        if clipboardMonitor.hasUploadableImage {
+            return "Command-V or click here to upload the copied image or image file."
+        }
+
+        return "Copy an image or image file first, then press Command-V to upload it."
     }
 
     private var dropZone: some View {

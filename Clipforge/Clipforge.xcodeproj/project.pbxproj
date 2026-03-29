@@ -44,6 +44,7 @@
 		E16C24D8A26F3716C3E13608 /* HotkeyRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */; };
 		E421CBFF6FD1087876ADB970 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF02CDE7436EDFDB7E11E7A4 /* MenuBarView.swift */; };
 		EA1CD043F2076A8EA3078D1E /* UploadRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */; };
+		F4B9CDAD51AFD1B9CD7603BE /* ClipboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EEA61B59DFFA7A18D472CE9 /* ClipboardMonitor.swift */; };
 		F798183B33DD370E71C20951 /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F39D3C43764C306840DD6C0 /* ScreenCaptureKit.framework */; };
 		F99C73C1F9DA94240C54FA02 /* CaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33160FDE098A61A0A6339A6 /* CaptureService.swift */; };
 		FA873BF6125BAA0797C3B935 /* ToastPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AD97158435943DF5ECC0FA /* ToastPresenter.swift */; };
@@ -67,6 +68,7 @@
 		3B53C41A82477C390536133F /* FilenameGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilenameGenerator.swift; sourceTree = "<group>"; };
 		3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadRecord.swift; sourceTree = "<group>"; };
 		4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorController.swift; sourceTree = "<group>"; };
+		4EEA61B59DFFA7A18D472CE9 /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
 		546AB298974720DBF85A6437 /* HotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyService.swift; sourceTree = "<group>"; };
 		549D293DAA0834A29769E500 /* ClipforgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipforgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentUploadsList.swift; sourceTree = "<group>"; };
@@ -261,6 +263,7 @@
 		F136143C3FBEDCE3168204D3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				4EEA61B59DFFA7A18D472CE9 /* ClipboardMonitor.swift */,
 				266E2ACD43AECEFBE16F104C /* ClipboardService.swift */,
 				C3B701501D482F7307579318 /* DroppedImageLoader.swift */,
 				3B53C41A82477C390536133F /* FilenameGenerator.swift */,
@@ -386,6 +389,7 @@
 				6DF76DE609E6943FEDD2334E /* AppSettings.swift in Sources */,
 				F99C73C1F9DA94240C54FA02 /* CaptureService.swift in Sources */,
 				2A514954210CFD1D72064F32 /* CapturedAsset.swift in Sources */,
+				F4B9CDAD51AFD1B9CD7603BE /* ClipboardMonitor.swift in Sources */,
 				C37E1BF69284D8E6E0CE913B /* ClipboardService.swift in Sources */,
 				67315F6F524D9860E264CE11 /* ClipforgeApp.swift in Sources */,
 				96F24D37A827787C440DD878 /* ClipforgeError.swift in Sources */,

@@ -231,7 +231,7 @@ final class AppController: ObservableObject {
     }
 
     private func runClipboardUpload(source: ActionSource) async {
-        guard await beginWork(status: "Preparing clipboard image…", source: source, closesPopover: false) else { return }
+        guard await beginWork(status: "Preparing pasted image…", source: source, closesPopover: false) else { return }
         defer { endWork() }
 
         do {
@@ -240,7 +240,7 @@ final class AppController: ObservableObject {
             )
             try await deliver(asset: asset, forceUpload: true)
         } catch {
-            present(error: error, title: "Clipboard upload failed")
+            present(error: error, title: "Paste failed")
         }
     }
 

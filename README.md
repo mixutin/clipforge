@@ -26,6 +26,7 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Configurable post-upload quick actions
 - Clipboard-only capture mode when you do not want to use a server
 - Drag-and-drop image uploads from Finder or other apps
+- Clipboard image/file paste with `Command-V` and live clipboard detection
 - Upload progress UI for larger uploads
 - Optional annotation review with arrows, boxes, highlights, and freehand pen markup
 - Local recent upload history

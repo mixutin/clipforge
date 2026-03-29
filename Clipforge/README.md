@@ -10,6 +10,7 @@ Clipforge is a native macOS menu bar screenshot uploader that captures with Scre
 - Full-screen capture of the display under the cursor
 - Active-window capture
 - Clipboard image upload
+- Clipboard image and copied image-file paste with `Command-V`
 - Drag-and-drop image upload inside the menu bar popover
 - Clipboard-only capture mode when no server is configured
 - Bearer-token authenticated multipart uploads

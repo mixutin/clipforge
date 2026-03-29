@@ -12,6 +12,7 @@ The list is intentionally opinionated:
 
 ## Recently Completed
 
+- [x] Add clipboard image polling or a paste action for faster non-screenshot uploads
 - [x] Add image annotation tools before upload
 - [x] Add drag-and-drop image upload support to the menu bar popover
 - [x] Add basic automated tests around filename generation, history persistence, and upload response decoding
@@ -33,7 +34,6 @@ The list is intentionally opinionated:
 
 ## Next
 
-- [ ] Add clipboard image polling or a paste action for faster non-screenshot uploads
 - [ ] Add optional JPEG/PNG compression settings in the app
 - [ ] Add richer filename templates with placeholders like date, time, display name, and random suffix
 - [ ] Add a searchable upload history view outside the compact menu bar list

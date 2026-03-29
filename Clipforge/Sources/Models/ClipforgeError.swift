@@ -32,7 +32,7 @@ enum ClipforgeError: LocalizedError, Sendable {
         case .activeWindowUnavailable:
             return "Clipforge could not find a capturable active window."
         case .clipboardDoesNotContainImage:
-            return "The clipboard does not currently contain an image."
+            return "The clipboard does not currently contain an image or copied image file."
         case .droppedItemNotSupported:
             return "Drop a PNG, JPG, WEBP, or an image from another app."
         case .uploadUnauthorized:
