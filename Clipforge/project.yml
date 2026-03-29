@@ -1,6 +1,10 @@
 name: Clipforge
 options:
   createIntermediateGroups: true
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.9.0
 settings:
   base:
     CURRENT_PROJECT_VERSION: 1
@@ -26,6 +30,7 @@ targets:
     dependencies:
       - sdk: ScreenCaptureKit.framework
       - sdk: Carbon.framework
+      - package: Sparkle
 schemes:
   Clipforge:
     build:

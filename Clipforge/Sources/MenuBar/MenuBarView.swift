@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject private var appController: AppController
+    @EnvironmentObject private var updaterController: UpdaterController
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -61,6 +62,11 @@ struct MenuBarView: View {
                 Button("Settings") {
                     appController.openSettings()
                 }
+
+                Button("Check for Updates…") {
+                    updaterController.checkForUpdates()
+                }
+                .disabled(!updaterController.canCheckForUpdates)
 
                 Spacer()
 

@@ -37,6 +37,7 @@ final class MenuBarController: NSObject {
         popover.contentViewController = NSHostingController(
             rootView: MenuBarView()
                 .environmentObject(appController)
+                .environmentObject(UpdaterController.shared)
         )
     }
 

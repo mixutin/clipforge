@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appController: AppController
+    @EnvironmentObject private var updaterController: UpdaterController
     @ObservedObject private var settings = SettingsStore.shared
 
     var body: some View {
@@ -67,6 +68,43 @@ struct SettingsView: View {
                 Button("Open Screen Recording Settings") {
                     PermissionManager.openScreenCaptureSettings()
                 }
+            }
+
+            Section("Updates") {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(updaterController.versionDescription)
+                            .font(.system(size: 12, weight: .medium))
+
+                        Text("Clipforge can check GitHub-hosted releases and install newer versions with Sparkle.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button("Check for Updates…") {
+                        updaterController.checkForUpdates()
+                    }
+                    .disabled(!updaterController.canCheckForUpdates)
+                }
+
+                Toggle(
+                    "Automatically check for updates",
+                    isOn: Binding(
+                        get: { updaterController.automaticallyChecksForUpdates },
+                        set: { updaterController.setAutomaticallyChecksForUpdates($0) }
+                    )
+                )
+
+                Toggle(
+                    "Automatically download updates in the background",
+                    isOn: Binding(
+                        get: { updaterController.automaticallyDownloadsUpdates },
+                        set: { updaterController.setAutomaticallyDownloadsUpdates($0) }
+                    )
+                )
+                .disabled(!updaterController.automaticallyChecksForUpdates || !updaterController.allowsAutomaticUpdates)
             }
         }
         .formStyle(.grouped)

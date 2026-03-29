@@ -29,5 +29,13 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://mixutin.github.io/clipforge/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>8qA5yp0RImH/aHX5TRT8/i0B6tCHKR4u26EuCJclC0Q=</string>
 </dict>
 </plist>
