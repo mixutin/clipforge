@@ -64,4 +64,35 @@ final class HistoryStoreTests: XCTestCase {
             "clipforge-2.png"
         ])
     }
+
+    @MainActor
+    func testLoadDecodesLegacyRecordsWithoutMediaKindOrRecognizedText() throws {
+        let historyDirectory = temporaryDirectory!
+        try FileManager.default.createDirectory(at: historyDirectory, withIntermediateDirectories: true)
+
+        let legacyJSON = """
+        [
+          {
+            "id": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+            "localFilename": "clipforge-legacy.png",
+            "remoteURL": "https://example.com/uploads/clipforge-legacy.png",
+            "thumbnailPNGData": "AQID",
+            "createdAt": "2023-11-14T22:13:20Z"
+          }
+        ]
+        """
+
+        let legacyData = try XCTUnwrap(legacyJSON.data(using: .utf8))
+        try legacyData.write(
+            to: historyDirectory.appendingPathComponent("recent-uploads.json"),
+            options: .atomic
+        )
+
+        let store = HistoryStore(baseDirectory: historyDirectory)
+        let items = store.load()
+
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.first?.mediaKind, .image)
+        XCTAssertNil(items.first?.recognizedText)
+    }
 }

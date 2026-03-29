@@ -3,23 +3,26 @@
 [![CI](https://github.com/mixutin/clipforge/actions/workflows/ci.yml/badge.svg)](https://github.com/mixutin/clipforge/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/mixutin/clipforge)](./LICENSE)
 
-Clipforge is a native macOS screenshot uploader built for speed, simplicity, and self-hosting.
+Clipforge is a native macOS capture uploader built for speed, simplicity, and self-hosting.
 
-Press a global hotkey, select an area of the screen, upload the screenshot to your own server, copy the returned URL, and keep moving.
+Press a global hotkey, capture part of the screen, upload it to your own server, copy the returned share link, and keep moving.
 
 ## What Is Included
 
-- `Clipforge`: a native macOS menu bar app built with Swift, SwiftUI, AppKit, and ScreenCaptureKit
-- `Clipforge Server`: a small FastAPI backend for authenticated image uploads and static file serving
+- `Clipforge`: a native macOS menu bar app built with Swift, SwiftUI, AppKit, Vision, and ScreenCaptureKit
+- `Clipforge Server`: a small FastAPI backend for authenticated image and short video uploads plus static file serving
 
 ## Highlights
 
 - Native macOS menu bar workflow
 - Area capture and full-screen capture
 - Active-window capture
+- Guided scroll capture for long pages
+- Short screen clip recording and upload
 - Global hotkey support
 - Configurable hotkey recorder UI
 - ScreenCaptureKit-based screenshots
+- OCR on captured images with quick text copy actions
 - Bearer-token authenticated multipart uploads
 - Keychain-backed API token storage
 - Multiple named server profiles in the macOS app
@@ -38,9 +41,19 @@ Press a global hotkey, select an area of the screen, upload the screenshot to yo
 - Local-first settings
 - Sparkle-powered in-app update checks
 - Self-hosted backend with local disk storage
+- Backend support for image and short video uploads
 - Token-authenticated backend delete endpoint for removing uploads
 - Optional Open Graph share pages for cleaner Discord-style embeds
+- Optional Developer ID signing and notarization in the release workflow
 - Permissive open-source licensing
+
+## Preview
+
+![Clipforge menu bar popover](./docs/assets/clipforge-menu-popover.png)
+
+![Clipforge searchable upload history window](./docs/assets/clipforge-history-window.png)
+
+![Clipforge demo flow](./docs/assets/clipforge-demo.gif)
 
 ## Repo Layout
 
@@ -88,6 +101,8 @@ Build and run the `Clipforge` scheme, then configure:
 5. The image uploads to the active self-hosted server profile
 6. The server returns a public URL
 7. Clipforge copies the URL to the clipboard and shows a success toast
+
+The app also supports OCR-assisted copy actions, scroll capture for longer pages, and short screen clip uploads when a server profile is configured.
 
 ## Documentation
 

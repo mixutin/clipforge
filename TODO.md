@@ -12,6 +12,11 @@ The list is intentionally opinionated:
 
 ## Recently Completed
 
+- [x] Add scroll capture for long pages
+- [x] Add short screen recording upload support
+- [x] Add OCR on captured images with a copy-recognized-text action
+- [x] Add screenshots and a short demo GIF to the README
+- [x] Add a notarized release pipeline for the macOS app
 - [x] Add support for multiple server profiles in the app
 - [x] Add a server endpoint for deleting uploads with token auth
 - [x] Add a searchable upload history view outside the compact menu bar list
@@ -41,9 +46,6 @@ The list is intentionally opinionated:
 
 ## Later
 
-- [ ] Add scroll capture for long pages
-- [ ] Add short screen recording upload support
-- [ ] Add OCR on captured images with a copy-recognized-text action
 - [ ] Add image optimization and automatic format conversion on the server
 - [ ] Add optional signed or expiring public links
 - [ ] Add S3-compatible storage support for the backend
@@ -54,11 +56,9 @@ The list is intentionally opinionated:
 
 ## Open Source And Release Work
 
-- [ ] Add screenshots and a short demo GIF to the README
 - [ ] Add a changelog and release process doc
 - [ ] Add conventional issue labels and milestone planning
 - [ ] Add a small test fixture set for backend upload cases
-- [ ] Add a notarized release pipeline for the macOS app
 - [ ] Add installation docs for Homebrew and standalone `.dmg` distribution
 - [ ] Add a contributor-friendly local dev script for booting server and app-side prerequisites
 - [ ] Add architecture decision records for major future changes

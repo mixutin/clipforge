@@ -5,6 +5,7 @@ struct RecentUploadsList: View {
     let items: [UploadRecord]
     let previewLimit: Int
     let onCopy: (UploadRecord) -> Void
+    let onCopyRecognizedText: (UploadRecord) -> Void
     let onOpen: (UploadRecord) -> Void
     let onShowHistory: () -> Void
 
@@ -41,7 +42,7 @@ struct RecentUploadsList: View {
                     VStack(spacing: 8) {
                         ForEach(displayItems) { item in
                             HStack(alignment: .top, spacing: 10) {
-                                UploadThumbnailView(data: item.thumbnailPNGData)
+                                UploadThumbnailView(data: item.thumbnailPNGData, mediaKind: item.mediaKind)
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.localFilename)
@@ -66,6 +67,14 @@ struct RecentUploadsList: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
+
+                                    if item.hasRecognizedText {
+                                        Button("Text") {
+                                            onCopyRecognizedText(item)
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
 
                                     Button("Open") {
                                         onOpen(item)
@@ -96,21 +105,31 @@ struct RecentUploadsList: View {
 
 private struct UploadThumbnailView: View {
     let data: Data?
+    let mediaKind: UploadRecord.MediaKind
 
     var body: some View {
-        Group {
-            if let data, let image = NSImage(data: data) {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.primary.opacity(0.07))
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                if let data, let image = NSImage(data: data) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.primary.opacity(0.07))
 
-                    Image(systemName: "photo")
-                        .foregroundStyle(.secondary)
+                        Image(systemName: mediaKind == .video ? "video" : "photo")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+            }
+
+            if mediaKind == .video {
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white, .black.opacity(0.45))
+                    .padding(4)
             }
         }
         .frame(width: 52, height: 52)

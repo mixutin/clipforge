@@ -5,6 +5,7 @@ enum ClipforgeError: LocalizedError, Sendable {
     case missingAPIToken
     case screenCapturePermissionDenied
     case selectionCancelled
+    case scrollCaptureFailed
     case activeWindowUnavailable
     case clipboardDoesNotContainImage
     case droppedItemNotSupported
@@ -16,6 +17,7 @@ enum ClipforgeError: LocalizedError, Sendable {
     case failedToEncodeImage
     case failedToSaveLocalCopy(String)
     case screenshotUnavailable
+    case recordingUnavailable
     case serverError(String)
     case generic(String)
 
@@ -29,6 +31,8 @@ enum ClipforgeError: LocalizedError, Sendable {
             return "Clipforge needs Screen Recording permission before it can capture screenshots."
         case .selectionCancelled:
             return "Capture cancelled."
+        case .scrollCaptureFailed:
+            return "Clipforge could not build the scroll capture."
         case .activeWindowUnavailable:
             return "Clipforge could not find a capturable active window."
         case .clipboardDoesNotContainImage:
@@ -51,6 +55,8 @@ enum ClipforgeError: LocalizedError, Sendable {
             return "Clipforge could not save the local copy to \(path)."
         case .screenshotUnavailable:
             return "Clipforge could not create a screenshot."
+        case .recordingUnavailable:
+            return "Clipforge could not finish the screen recording."
         case .serverError(let message):
             return message
         case .generic(let message):

@@ -1,6 +1,6 @@
 # Clipforge
 
-Clipforge is a native macOS menu bar screenshot uploader that captures with ScreenCaptureKit, uploads to your own Clipforge Server, copies the returned URL, and keeps a lightweight local upload history.
+Clipforge is a native macOS menu bar capture uploader that captures with ScreenCaptureKit, uploads to your own Clipforge Server, copies the returned URL, and keeps a lightweight local upload history.
 
 ## Features
 
@@ -9,6 +9,9 @@ Clipforge is a native macOS menu bar screenshot uploader that captures with Scre
 - Area selection overlay with dimmed screen and drag-to-select flow
 - Full-screen capture of the display under the cursor
 - Active-window capture
+- Guided scroll capture for long pages
+- Short 8-second screen clip recording and upload
+- OCR text recognition with one-click copy actions on captured images
 - Clipboard image upload
 - Clipboard image and copied image-file paste with `Command-V`
 - Drag-and-drop image upload inside the menu bar popover
@@ -64,6 +67,7 @@ SwiftUI powers the popover and settings UI, while AppKit is used where macOS-nat
 - `NSStatusItem` and `NSPopover` for the menu bar presence
 - Carbon `RegisterEventHotKey` for a reliable global hotkey
 - Borderless `NSWindow` overlays for region selection
+- Guided helper windows for scroll capture and annotation review
 - Floating `NSPanel` toasts for success and error feedback
 
 ## Updates

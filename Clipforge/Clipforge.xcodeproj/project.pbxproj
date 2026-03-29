@@ -16,10 +16,13 @@
 		1EF978DC26B1FF03B3F1B2B1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6577605FE316B34BDC3F2 /* AppDelegate.swift */; };
 		26BCC7EBB3395017E3808017 /* AppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB8A862676651DC9D999323 /* AppController.swift */; };
 		2A514954210CFD1D72064F32 /* CapturedAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FA2F82775549FEA4F8C15C /* CapturedAsset.swift */; };
+		326ED05DA4F8EDCD217A033C /* ScreenRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C3DFDC1F7C7F02AC5979AE /* ScreenRecordingService.swift */; };
 		38F64A5152DFE855E7DD977D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DFC7844B577785E81CB591 /* SettingsStore.swift */; };
 		4A38B5E03CF5FF47331FE36F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56D427F021BD2114F68A67BE /* KeychainService.swift */; };
+		515AE10F3489F90357D4525C /* ScrollImageStitcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC8F9CA2940B23C6105C48F /* ScrollImageStitcherTests.swift */; };
 		541D96F259F5A2601C5E4233 /* UploadHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733E1F2B3B737B640AF4A9E1 /* UploadHistoryView.swift */; };
 		56121E515FF58E68B09664F7 /* PermissionOnboardingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AC88082291C992F742EFF1 /* PermissionOnboardingController.swift */; };
+		577CDAEF81DC76A49DC36F8C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86591B1FABF94DE6255F5E9D /* AVFoundation.framework */; };
 		599A5E64A80177F8CD03A8B3 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D68C151ECAF6309972DB800B /* Carbon.framework */; };
 		5F27F50576CF5F2AC6C033D2 /* HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD50FD3E1EC29824AF701F0F /* HistoryStoreTests.swift */; };
 		67315F6F524D9860E264CE11 /* ClipforgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A2382943BB77EC85192FD4 /* ClipforgeApp.swift */; };
@@ -29,6 +32,7 @@
 		71B66E940E28309F55558428 /* SelectionOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A7BFFD8DC928EC82F63BC87 /* SelectionOverlayController.swift */; };
 		72BEA578EC54C0DEE1B14442 /* RecentUploadsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */; };
 		7827656DFE7073431B88418A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DC4966FF7413CDF720BEF2DE /* Sparkle */; };
+		80E325066B8B9FD6063BC38C /* ScrollCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC7DF318E0FFAFB7584F4D6 /* ScrollCaptureController.swift */; };
 		8A08F17B360A429F8F5EC1C7 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BDFE125C846EFD4199993E /* SettingsStoreTests.swift */; };
 		8E46158C71F3587A4A9CA3B4 /* AnnotationEditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */; };
 		953BA25CFCA75211534CD27E /* AnnotationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F9954171CC7589782A6A14 /* AnnotationModels.swift */; };
@@ -42,14 +46,18 @@
 		A3C6A6415BE65D1EEFEC91AD /* UploadHistoryFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3882003D65A5B1F71FDEE7B4 /* UploadHistoryFilter.swift */; };
 		AE1644B33D39678C673358DA /* PermissionOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62A3A364E6BD3903ED05418 /* PermissionOnboardingView.swift */; };
 		B0D8DA151D7CF58957EB83D3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */; };
+		B3DD1848458186084D53C552 /* ScrollImageStitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D53EA7E82D7CA9DAC2848C /* ScrollImageStitcher.swift */; };
 		B56F5CDFDE7C5C4BF6B4F5BC /* MultipartFormDataBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5386BE6AE97D057FCC750C0 /* MultipartFormDataBuilder.swift */; };
 		B5B52F8C75FE48D6765931FC /* AnnotationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C3629EF4DBFF03013D6A0E /* AnnotationEditorView.swift */; };
 		B8E779C0902A36C6BF786D68 /* ThumbnailGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */; };
+		C199BA4BFF48693C226EE1FD /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A5485139EC963E0A14E2BA14 /* Vision.framework */; };
 		C37E1BF69284D8E6E0CE913B /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 266E2ACD43AECEFBE16F104C /* ClipboardService.swift */; };
+		D2FDA7620A405FE80B6582B4 /* ScrollCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91405C0B399C2448766383EF /* ScrollCaptureView.swift */; };
 		E16C24D8A26F3716C3E13608 /* HotkeyRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */; };
 		E421CBFF6FD1087876ADB970 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF02CDE7436EDFDB7E11E7A4 /* MenuBarView.swift */; };
 		EA1CD043F2076A8EA3078D1E /* UploadRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */; };
 		F4B9CDAD51AFD1B9CD7603BE /* ClipboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EEA61B59DFFA7A18D472CE9 /* ClipboardMonitor.swift */; };
+		F5045689D194C230219667CE /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A7D1D9A0E201C4504D56FF /* OCRService.swift */; };
 		F798183B33DD370E71C20951 /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F39D3C43764C306840DD6C0 /* ScreenCaptureKit.framework */; };
 		F99C73C1F9DA94240C54FA02 /* CaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33160FDE098A61A0A6339A6 /* CaptureService.swift */; };
 		FA873BF6125BAA0797C3B935 /* ToastPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AD97158435943DF5ECC0FA /* ToastPresenter.swift */; };
@@ -72,6 +80,7 @@
 		266E2ACD43AECEFBE16F104C /* ClipboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardService.swift; sourceTree = "<group>"; };
 		3882003D65A5B1F71FDEE7B4 /* UploadHistoryFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadHistoryFilter.swift; sourceTree = "<group>"; };
 		3B53C41A82477C390536133F /* FilenameGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilenameGenerator.swift; sourceTree = "<group>"; };
+		3DC7DF318E0FFAFB7584F4D6 /* ScrollCaptureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollCaptureController.swift; sourceTree = "<group>"; };
 		3E4E2DEB56D883B104E6DA9E /* UploadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadRecord.swift; sourceTree = "<group>"; };
 		4C7125EE9EC7A597A41EF725 /* AnnotationEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorController.swift; sourceTree = "<group>"; };
 		4EEA61B59DFFA7A18D472CE9 /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
@@ -88,12 +97,17 @@
 		733E1F2B3B737B640AF4A9E1 /* UploadHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadHistoryView.swift; sourceTree = "<group>"; };
 		7453427B8DA2BEC1F5D0E56F /* UploadClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadClientTests.swift; sourceTree = "<group>"; };
 		81AD97158435943DF5ECC0FA /* ToastPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPresenter.swift; sourceTree = "<group>"; };
+		86591B1FABF94DE6255F5E9D /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		8725181E9A1C5CD60054355F /* Clipforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E7EC18F26764720F1D27394 /* AnnotationCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationCanvasView.swift; sourceTree = "<group>"; };
+		90D53EA7E82D7CA9DAC2848C /* ScrollImageStitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollImageStitcher.swift; sourceTree = "<group>"; };
+		91405C0B399C2448766383EF /* ScrollCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollCaptureView.swift; sourceTree = "<group>"; };
+		A5485139EC963E0A14E2BA14 /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
 		A5F9954171CC7589782A6A14 /* AnnotationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationModels.swift; sourceTree = "<group>"; };
 		B2BDFE125C846EFD4199993E /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
 		B8FA2F82775549FEA4F8C15C /* CapturedAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedAsset.swift; sourceTree = "<group>"; };
 		BC9C1E6FFB670D238DAEBDBF /* AnnotationEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorViewModel.swift; sourceTree = "<group>"; };
+		C1C3DFDC1F7C7F02AC5979AE /* ScreenRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecordingService.swift; sourceTree = "<group>"; };
 		C33160FDE098A61A0A6339A6 /* CaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureService.swift; sourceTree = "<group>"; };
 		C3B701501D482F7307579318 /* DroppedImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroppedImageLoader.swift; sourceTree = "<group>"; };
 		C4B1CF8EFB67C18E46BA47E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -108,10 +122,12 @@
 		DF02CDE7436EDFDB7E11E7A4 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		E1AC88082291C992F742EFF1 /* PermissionOnboardingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOnboardingController.swift; sourceTree = "<group>"; };
 		E5F5203F2A6018B20CA3FD9A /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
+		E6A7D1D9A0E201C4504D56FF /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		E7DFC7844B577785E81CB591 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		F5386BE6AE97D057FCC750C0 /* MultipartFormDataBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormDataBuilder.swift; sourceTree = "<group>"; };
 		F5C3629EF4DBFF03013D6A0E /* AnnotationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEditorView.swift; sourceTree = "<group>"; };
 		FA5506794905B9104D8C7278 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		FAC8F9CA2940B23C6105C48F /* ScrollImageStitcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollImageStitcherTests.swift; sourceTree = "<group>"; };
 		FDE6577605FE316B34BDC3F2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -121,6 +137,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F798183B33DD370E71C20951 /* ScreenCaptureKit.framework in Frameworks */,
+				577CDAEF81DC76A49DC36F8C /* AVFoundation.framework in Frameworks */,
+				C199BA4BFF48693C226EE1FD /* Vision.framework in Frameworks */,
 				599A5E64A80177F8CD03A8B3 /* Carbon.framework in Frameworks */,
 				7827656DFE7073431B88418A /* Sparkle in Frameworks */,
 			);
@@ -132,8 +150,10 @@
 		0215FCE44DCB601021123B9F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				86591B1FABF94DE6255F5E9D /* AVFoundation.framework */,
 				D68C151ECAF6309972DB800B /* Carbon.framework */,
 				5F39D3C43764C306840DD6C0 /* ScreenCaptureKit.framework */,
+				A5485139EC963E0A14E2BA14 /* Vision.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -181,6 +201,7 @@
 				C94FBF9554A78E33B21E7048 /* HotkeyRecorderView.swift */,
 				D62A3A364E6BD3903ED05418 /* PermissionOnboardingView.swift */,
 				54CBB1C048FB79ECBB7A33CC /* RecentUploadsList.swift */,
+				91405C0B399C2448766383EF /* ScrollCaptureView.swift */,
 				733E1F2B3B737B640AF4A9E1 /* UploadHistoryView.swift */,
 			);
 			path = Views;
@@ -258,6 +279,8 @@
 			isa = PBXGroup;
 			children = (
 				C33160FDE098A61A0A6339A6 /* CaptureService.swift */,
+				C1C3DFDC1F7C7F02AC5979AE /* ScreenRecordingService.swift */,
+				3DC7DF318E0FFAFB7584F4D6 /* ScrollCaptureController.swift */,
 				6A7BFFD8DC928EC82F63BC87 /* SelectionOverlayController.swift */,
 			);
 			path = Capture;
@@ -291,7 +314,9 @@
 				0BD6B7EE1528CA1996B365F9 /* HistoryStore.swift */,
 				546AB298974720DBF85A6437 /* HotkeyService.swift */,
 				56D427F021BD2114F68A67BE /* KeychainService.swift */,
+				E6A7D1D9A0E201C4504D56FF /* OCRService.swift */,
 				E5F5203F2A6018B20CA3FD9A /* PermissionManager.swift */,
+				90D53EA7E82D7CA9DAC2848C /* ScrollImageStitcher.swift */,
 				C5CCFB2ED3B2F9B4257CEC20 /* ThumbnailGenerator.swift */,
 				81AD97158435943DF5ECC0FA /* ToastPresenter.swift */,
 				6B62BB65AC25308A1C2CC0B6 /* UpdaterController.swift */,
@@ -305,6 +330,7 @@
 			children = (
 				1F5A84E713F3E7F70214D096 /* FilenameGeneratorTests.swift */,
 				DD50FD3E1EC29824AF701F0F /* HistoryStoreTests.swift */,
+				FAC8F9CA2940B23C6105C48F /* ScrollImageStitcherTests.swift */,
 				D0BEBFAE9D106ECDB1441153 /* UploadHistoryFilterTests.swift */,
 			);
 			path = Utilities;
@@ -394,6 +420,7 @@
 			files = (
 				97805279575A6D0CADF51C52 /* FilenameGeneratorTests.swift in Sources */,
 				5F27F50576CF5F2AC6C033D2 /* HistoryStoreTests.swift in Sources */,
+				515AE10F3489F90357D4525C /* ScrollImageStitcherTests.swift in Sources */,
 				8A08F17B360A429F8F5EC1C7 /* SettingsStoreTests.swift in Sources */,
 				09C8237B37DCE1EE24011B0F /* UploadClientTests.swift in Sources */,
 				A3214D92E0E307D423DD45C5 /* UploadHistoryFilterTests.swift in Sources */,
@@ -427,10 +454,15 @@
 				9BA2CF4CC4D2E4FCAF1CCD03 /* MenuBarController.swift in Sources */,
 				E421CBFF6FD1087876ADB970 /* MenuBarView.swift in Sources */,
 				B56F5CDFDE7C5C4BF6B4F5BC /* MultipartFormDataBuilder.swift in Sources */,
+				F5045689D194C230219667CE /* OCRService.swift in Sources */,
 				155B9E31281636FBBD5A2E29 /* PermissionManager.swift in Sources */,
 				56121E515FF58E68B09664F7 /* PermissionOnboardingController.swift in Sources */,
 				AE1644B33D39678C673358DA /* PermissionOnboardingView.swift in Sources */,
 				72BEA578EC54C0DEE1B14442 /* RecentUploadsList.swift in Sources */,
+				326ED05DA4F8EDCD217A033C /* ScreenRecordingService.swift in Sources */,
+				80E325066B8B9FD6063BC38C /* ScrollCaptureController.swift in Sources */,
+				D2FDA7620A405FE80B6582B4 /* ScrollCaptureView.swift in Sources */,
+				B3DD1848458186084D53C552 /* ScrollImageStitcher.swift in Sources */,
 				71B66E940E28309F55558428 /* SelectionOverlayController.swift in Sources */,
 				38F64A5152DFE855E7DD977D /* SettingsStore.swift in Sources */,
 				B0D8DA151D7CF58957EB83D3 /* SettingsView.swift in Sources */,

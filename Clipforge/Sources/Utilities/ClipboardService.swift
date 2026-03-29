@@ -26,6 +26,10 @@ final class ClipboardService {
     }
 
     func copyImageAsset(_ asset: CapturedAsset) throws {
+        guard asset.isImage else {
+            throw ClipforgeError.failedToEncodeImage
+        }
+
         guard let image = NSImage(data: asset.data) else {
             throw ClipforgeError.failedToEncodeImage
         }

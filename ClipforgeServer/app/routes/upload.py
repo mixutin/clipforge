@@ -14,6 +14,7 @@ from ..utils.files import (
     FileValidationError,
     build_public_url,
     delete_upload_file,
+    detect_media_kind,
     normalize_upload_filename,
     save_upload_file,
 )
@@ -59,13 +60,19 @@ async def upload_image(
         ) from exc
 
     direct_url = build_public_url(settings.base_url, filename)
-    returned_url = build_share_url(settings.base_url, filename) if settings.enable_share_embeds else direct_url
+    media_kind = detect_media_kind(filename)
+    returned_url = (
+        build_share_url(settings.base_url, filename)
+        if settings.enable_share_embeds
+        else direct_url
+    )
 
     logger.info("Uploaded %s (%s bytes) from %s", filename, total_bytes, client_ip)
     return {
         "url": returned_url,
         "direct_url": direct_url,
         "share_url": build_share_url(settings.base_url, filename),
+        "media_kind": media_kind,
     }
 
 
@@ -111,6 +118,7 @@ async def share_image(
 
     direct_url = build_public_url(settings.base_url, safe_filename)
     share_url = build_share_url(settings.base_url, safe_filename)
+    media_kind = detect_media_kind(safe_filename)
 
     if settings.enable_share_embeds is False:
         return RedirectResponse(url=direct_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -130,6 +138,7 @@ async def share_image(
         site_name=site_name,
         direct_url=direct_url,
         share_url=share_url,
+        media_kind=media_kind,
         theme_color=normalize_theme_color(settings.embed_theme_color),
     )
     return HTMLResponse(content=build_share_page_html(metadata))

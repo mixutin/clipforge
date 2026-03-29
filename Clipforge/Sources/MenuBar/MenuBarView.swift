@@ -39,6 +39,23 @@ struct MenuBarView: View {
                 }
 
                 actionButton(
+                    title: "Scroll Capture",
+                    subtitle: scrollCaptureSubtitle,
+                    icon: "rectangle.inset.filled.and.person.filled"
+                ) {
+                    appController.captureScroll()
+                }
+
+                actionButton(
+                    title: "Record 8s Screen Clip",
+                    subtitle: screenRecordingSubtitle,
+                    icon: "record.circle"
+                ) {
+                    appController.recordScreenClip()
+                }
+                .disabled(appController.isBusy || !appController.canRecordScreenClip)
+
+                actionButton(
                     title: "Paste Clipboard Image",
                     subtitle: pasteClipboardSubtitle,
                     icon: "doc.on.clipboard"
@@ -61,6 +78,7 @@ struct MenuBarView: View {
                 items: appController.recentUploads,
                 previewLimit: 5,
                 onCopy: appController.copyUploadContent,
+                onCopyRecognizedText: appController.copyRecognizedText,
                 onOpen: appController.openUpload,
                 onShowHistory: appController.openUploadHistory
             )
@@ -164,6 +182,27 @@ struct MenuBarView: View {
                 ? "Capture the frontmost app window and upload it"
                 : "Capture the frontmost app window and copy it to the clipboard"
         }
+    }
+
+    private var scrollCaptureSubtitle: String {
+        switch settings.captureDestinationMode {
+        case .clipboardOnly:
+            return "Stitch a long scrolling page and copy it as one tall image"
+        case .serverUpload:
+            return "Stitch a long scrolling page and upload it as one tall image"
+        case .automatic:
+            return settings.hasReadyUploadConfiguration
+                ? "Stitch a long scrolling page and upload it as one tall image"
+                : "Stitch a long scrolling page and copy it as one tall image"
+        }
+    }
+
+    private var screenRecordingSubtitle: String {
+        guard settings.hasReadyUploadConfiguration else {
+            return "Set up a server first to upload short MP4 screen clips."
+        }
+
+        return "Record the display under your cursor for 8 seconds and upload an MP4 clip."
     }
 
     private var pasteClipboardSubtitle: String {

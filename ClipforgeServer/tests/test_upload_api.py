@@ -18,6 +18,7 @@ from app.rate_limit import get_rate_limiter
 PNG_BYTES = b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z0ioAAAAASUVORK5CYII="
 )
+MP4_BYTES = b"\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom\x00\x00\x00\x08free"
 
 
 @pytest.fixture()
@@ -80,6 +81,21 @@ def test_upload_accepts_valid_png(client: TestClient) -> None:
     assert payload["url"].startswith("http://testserver/uploads/")
     assert payload["direct_url"] == payload["url"]
     assert payload["share_url"].startswith("http://testserver/share/")
+    assert payload["media_kind"] == "image"
+
+
+def test_upload_accepts_valid_mp4(client: TestClient) -> None:
+    response = client.post(
+        "/upload",
+        headers={"Authorization": "Bearer test-token"},
+        files={"file": ("capture.mp4", MP4_BYTES, "video/mp4")},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["url"].startswith("http://testserver/uploads/")
+    assert payload["direct_url"].endswith(".mp4")
+    assert payload["media_kind"] == "video"
 
 
 def test_upload_rejects_invalid_file_signature(client: TestClient, tmp_path: Path) -> None:
@@ -91,7 +107,7 @@ def test_upload_rejects_invalid_file_signature(client: TestClient, tmp_path: Pat
 
     assert response.status_code == 400
     assert response.json() == {
-        "detail": "The uploaded file contents do not match a supported image format."
+        "detail": "The uploaded file contents do not match a supported Clipforge upload format."
     }
     assert list((tmp_path / "uploads").glob("*")) == []
 

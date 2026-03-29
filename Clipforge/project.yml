@@ -29,6 +29,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.clipforge.app
     dependencies:
       - sdk: ScreenCaptureKit.framework
+      - sdk: AVFoundation.framework
+      - sdk: Vision.framework
       - sdk: Carbon.framework
       - package: Sparkle
   ClipforgeTests:

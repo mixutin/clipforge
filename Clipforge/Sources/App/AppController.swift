@@ -51,6 +51,8 @@ final class AppController: ObservableObject {
     let settingsStore = SettingsStore.shared
     private let historyStore = HistoryStore.shared
     private let captureService = CaptureService()
+    private let screenRecordingService = ScreenRecordingService()
+    private let scrollCaptureController = ScrollCaptureController()
     private let uploadClient = UploadClient()
     private let clipboardService = ClipboardService.shared
     private let toastPresenter = ToastPresenter.shared
@@ -95,6 +97,10 @@ final class AppController: ObservableObject {
         settingsStore.hasReadyUploadConfiguration
     }
 
+    var canRecordScreenClip: Bool {
+        settingsStore.hasReadyUploadConfiguration
+    }
+
     var uploadProgressPercentText: String? {
         guard let uploadProgress else { return nil }
         return "\(Int((uploadProgress * 100).rounded()))%"
@@ -134,6 +140,12 @@ final class AppController: ObservableObject {
         }
     }
 
+    func captureScroll(source: ActionSource = .menuBar) {
+        Task {
+            await runScrollCapture(source: source)
+        }
+    }
+
     func captureFullScreen(source: ActionSource = .menuBar) {
         Task {
             await runCaptureFullScreen(source: source)
@@ -143,6 +155,12 @@ final class AppController: ObservableObject {
     func uploadClipboardImage(source: ActionSource = .menuBar) {
         Task {
             await runClipboardUpload(source: source)
+        }
+    }
+
+    func recordScreenClip(source: ActionSource = .menuBar) {
+        Task {
+            await runScreenRecording(source: source)
         }
     }
 
@@ -177,6 +195,20 @@ final class AppController: ObservableObject {
 
         clipboardService.copyString(copiedContent)
         toastPresenter.showSuccess(title: copyFormat.copyToastTitle, message: copiedContent)
+    }
+
+    func copyRecognizedText(_ record: UploadRecord) {
+        guard let recognizedText = record.recognizedText?.trimmingCharacters(in: .whitespacesAndNewlines),
+              recognizedText.isEmpty == false
+        else {
+            return
+        }
+
+        clipboardService.copyString(recognizedText)
+        toastPresenter.showSuccess(
+            title: "Recognized text copied",
+            message: recognizedText
+        )
     }
 
     func openUpload(_ record: UploadRecord) {
@@ -229,6 +261,29 @@ final class AppController: ObservableObject {
             try await deliver(asset: asset)
         } catch {
             present(error: error, title: "Capture failed")
+        }
+    }
+
+    private func runScrollCapture(source: ActionSource) async {
+        guard await beginWork(status: "Preparing scroll capture…", source: source, closesPopover: true) else { return }
+        defer { endWork() }
+
+        do {
+            let currentSettings = settingsStore.currentSettings
+            let asset = try await scrollCaptureController.capture(
+                using: captureService,
+                settings: currentSettings,
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    displayName: captureService.activeWindowDisplayName(),
+                    sourceName: "scroll"
+                )
+            )
+
+            guard let asset else { return }
+            try await deliver(asset: asset)
+        } catch {
+            present(error: error, title: "Scroll capture failed")
         }
     }
 
@@ -293,6 +348,38 @@ final class AppController: ObservableObject {
         }
     }
 
+    private func runScreenRecording(source: ActionSource) async {
+        guard await beginWork(status: "Recording screen clip… 8s left", source: source, closesPopover: true) else { return }
+        defer { endWork() }
+
+        var countdownTask: Task<Void, Never>?
+        defer { countdownTask?.cancel() }
+
+        do {
+            _ = try settingsStore.validatedUploadSettings()
+            let currentSettings = settingsStore.currentSettings
+
+            countdownTask = Task { @MainActor [weak self] in
+                for remaining in stride(from: 7, through: 1, by: -1) {
+                    try? await Task.sleep(for: .seconds(1))
+                    guard Task.isCancelled == false else { return }
+                    self?.statusMessage = "Recording screen clip… \(remaining)s left"
+                }
+            }
+
+            let asset = try await screenRecordingService.recordShortClip(
+                filenameBase: makeFilenameBase(
+                    settings: currentSettings,
+                    displayName: captureService.activeDisplayName(),
+                    sourceName: "screen-clip"
+                )
+            )
+            try await deliver(asset: asset, forceUpload: true)
+        } catch {
+            present(error: error, title: "Screen clip failed")
+        }
+    }
+
     private func beginWork(status: String, source: ActionSource, closesPopover: Bool) async -> Bool {
         guard isBusy == false else { return false }
 
@@ -320,6 +407,8 @@ final class AppController: ObservableObject {
             statusMessage = "Copying to clipboard…"
 
             try clipboardService.copyImageAsset(preparedAsset)
+            let recognizedText = await recognizedTextIfAvailable(for: preparedAsset)
+            let recognizedTextAction = recognizedTextToastAction(for: recognizedText)
 
             let message: String
             if localSaveStatus.didFail {
@@ -329,14 +418,16 @@ final class AppController: ObservableObject {
             }
 
             toastPresenter.showSuccess(
-                title: "Clipforge copied your screenshot",
-                message: message
+                title: "Clipforge copied your capture",
+                message: message,
+                actionTitle: recognizedTextAction?.title,
+                action: recognizedTextAction?.handler
             )
         }
     }
 
     private func prepareAssetForDelivery(_ asset: CapturedAsset) async throws -> CapturedAsset? {
-        guard settingsStore.annotationReviewEnabled else { return asset }
+        guard settingsStore.annotationReviewEnabled, asset.isImage else { return asset }
 
         statusMessage = "Opening annotation editor…"
         menuBarController?.closePopover()
@@ -355,6 +446,7 @@ final class AppController: ObservableObject {
                 settings: settings,
                 isManualRetry: isManualRetry
             )
+            let recognizedText = await recognizedTextIfAvailable(for: asset)
             let revealedLocalFile = revealLocalFileIfNeeded(localSaveStatus: localSaveStatus, settings: settings)
             let successAction = successToastAction(
                 for: remoteURL,
@@ -362,6 +454,7 @@ final class AppController: ObservableObject {
                 localSaveStatus: localSaveStatus,
                 settings: settings
             )
+            let recognizedTextAction = recognizedTextToastAction(for: recognizedText)
 
             if settings.autoCopyLinkEnabled {
                 clipboardService.copyString(
@@ -376,7 +469,9 @@ final class AppController: ObservableObject {
             let record = UploadRecord(
                 localFilename: asset.filename,
                 remoteURL: remoteURL.absoluteString,
-                thumbnailPNGData: ThumbnailGenerator.makePNGData(from: asset.data),
+                thumbnailPNGData: asset.thumbnailPNGData,
+                mediaKind: asset.isVideo ? .video : .image,
+                recognizedText: recognizedText,
                 createdAt: Date()
             )
             recentUploads = historyStore.add(record)
@@ -395,10 +490,12 @@ final class AppController: ObservableObject {
             }
 
             toastPresenter.showSuccess(
-                title: "Clipforge uploaded your image",
+                title: asset.isVideo ? "Clipforge uploaded your screen clip" : "Clipforge uploaded your image",
                 message: message,
                 actionTitle: successAction?.title,
-                action: successAction?.handler
+                action: successAction?.handler,
+                secondaryActionTitle: recognizedTextAction?.title,
+                secondaryAction: recognizedTextAction?.handler
             )
         } catch {
             handleUploadFailure(
@@ -551,6 +648,31 @@ final class AppController: ObservableObject {
         }
     }
 
+    private func recognizedTextToastAction(for recognizedText: String?) -> SuccessToastAction? {
+        guard let recognizedText = recognizedText?.trimmingCharacters(in: .whitespacesAndNewlines),
+              recognizedText.isEmpty == false
+        else {
+            return nil
+        }
+
+        return SuccessToastAction(
+            title: "Copy Text",
+            handler: { [weak self] in
+                self?.clipboardService.copyString(recognizedText)
+                self?.toastPresenter.showSuccess(
+                    title: "Recognized text copied",
+                    message: recognizedText
+                )
+            }
+        )
+    }
+
+    private func recognizedTextIfAvailable(for asset: CapturedAsset) async -> String? {
+        guard asset.isImage else { return nil }
+        statusMessage = "Recognizing text…"
+        return await OCRService.recognizeText(in: asset)
+    }
+
     private func formattedUploadContent(
         remoteURLString: String,
         localFilename: String,
@@ -671,7 +793,7 @@ final class AppController: ObservableObject {
             return "\(baseMessage) The screenshot is still saved locally."
         case .notRequested:
             if error.isRetryableUploadFailure {
-                return "\(baseMessage) Retry Upload will resend the same screenshot without making you capture it again."
+                return "\(baseMessage) Retry Upload will resend the same capture without making you create it again."
             }
 
             return baseMessage

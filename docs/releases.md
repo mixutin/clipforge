@@ -22,6 +22,27 @@ Add this repository secret before running the release workflow:
 
 The matching public key is already embedded in the app's `Info.plist`.
 
+## Optional Notarization Secrets
+
+If you want release builds to be Developer ID signed, notarized, and stapled automatically, also add:
+
+- `APPLE_DEVELOPER_ID_CERT_P12_BASE64`: base64-encoded `.p12` certificate export
+- `APPLE_DEVELOPER_ID_CERT_PASSWORD`: password for the `.p12`
+- `APPLE_DEVELOPER_ID_APPLICATION`: full Developer ID Application identity name used by `codesign`
+- `APPLE_NOTARY_APPLE_ID`: Apple ID used for notarization
+- `APPLE_NOTARY_APP_SPECIFIC_PASSWORD`: app-specific password for the Apple ID
+- `APPLE_TEAM_ID`: Apple Developer team identifier
+
+When those secrets are present, the `Release` workflow:
+
+1. imports the signing certificate into a temporary keychain
+2. signs `Clipforge.app` and the generated `.dmg`
+3. submits the `.dmg` to Apple notarization
+4. staples the notarization ticket back onto the app and `.dmg`
+5. verifies the stapled installer with `spctl`
+
+If the notarization secrets are missing, the workflow still builds the `.dmg`, updates GitHub Releases, and publishes the Sparkle feed. It just skips Apple signing and notarization.
+
 ## How To Cut A Release
 
 1. Open the `Prepare Release` workflow in GitHub Actions

@@ -14,6 +14,7 @@ class ShareMetadata:
     site_name: str
     direct_url: str
     share_url: str
+    media_kind: str
     theme_color: str | None
 
 
@@ -61,6 +62,24 @@ def build_share_page_html(metadata: ShareMetadata) -> str:
     share_url = escape(metadata.share_url, quote=True)
     theme_color = escape(metadata.theme_color, quote=True) if metadata.theme_color else None
     theme_meta = f'<meta name="theme-color" content="{theme_color}">' if theme_color else ""
+    is_video = metadata.media_kind == "video"
+    og_type = "video.other" if is_video else "website"
+    media_meta = (
+        f'<meta property="og:video" content="{direct_url}">\n'
+        f'    <meta property="og:video:type" content="video/mp4">\n'
+        f'    <meta name="twitter:card" content="player">\n'
+        f'    <meta name="twitter:player" content="{share_url}">\n'
+        if is_video else
+        f'<meta property="og:image" content="{direct_url}">\n'
+        f'    <meta name="twitter:card" content="summary_large_image">\n'
+        f'    <meta name="twitter:image" content="{direct_url}">\n'
+    )
+    media_markup = (
+        f'<video src="{direct_url}" controls playsinline preload="metadata"></video>'
+        if is_video else
+        f'<img src="{direct_url}" alt="{title}">'
+    )
+    primary_action = "Open clip" if is_video else "Open image"
 
     return f"""<!doctype html>
 <html lang="en">
@@ -73,14 +92,12 @@ def build_share_page_html(metadata: ShareMetadata) -> str:
     <link rel="canonical" href="{share_url}">
     <meta property="og:title" content="{title}">
     <meta property="og:description" content="{description}">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="{direct_url}">
+    <meta property="og:type" content="{og_type}">
+    {media_meta.rstrip()}
     <meta property="og:url" content="{share_url}">
     <meta property="og:site_name" content="{site_name}">
-    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{title}">
     <meta name="twitter:description" content="{description}">
-    <meta name="twitter:image" content="{direct_url}">
     {theme_meta}
     <style>
       :root {{
@@ -132,7 +149,8 @@ def build_share_page_html(metadata: ShareMetadata) -> str:
         line-height: 1.6;
       }}
 
-      img {{
+      img,
+      video {{
         display: block;
         width: 100%;
         height: auto;
@@ -172,9 +190,9 @@ def build_share_page_html(metadata: ShareMetadata) -> str:
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
-        <img src="{direct_url}" alt="{title}">
+        {media_markup}
         <div class="actions">
-          <a class="button primary" href="{direct_url}">Open image</a>
+          <a class="button primary" href="{direct_url}">{primary_action}</a>
           <a class="button" href="{share_url}">Share page</a>
         </div>
       </div>

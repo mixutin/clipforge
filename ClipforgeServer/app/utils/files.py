@@ -6,11 +6,15 @@ from urllib.parse import quote
 
 from fastapi import UploadFile
 
-ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+VIDEO_EXTENSIONS = {".mp4", ".mov"}
+ALLOWED_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
 ALLOWED_CONTENT_TYPES = {
     "image/png": {".png"},
     "image/jpeg": {".jpg", ".jpeg"},
     "image/webp": {".webp"},
+    "video/mp4": {".mp4"},
+    "video/quicktime": {".mov"},
 }
 CHUNK_SIZE = 1024 * 1024
 
@@ -41,12 +45,18 @@ def validate_file_signature(header_bytes: bytes, extension: str) -> None:
     if extension == ".webp" and header_bytes.startswith(b"RIFF") and header_bytes[8:12] == b"WEBP":
         return
 
-    raise FileValidationError("The uploaded file contents do not match a supported image format.")
+    if extension == ".mp4" and _looks_like_iso_media_file(header_bytes, allowed_brands=None):
+        return
+
+    if extension == ".mov" and _looks_like_iso_media_file(header_bytes, allowed_brands={b"qt  "}):
+        return
+
+    raise FileValidationError("The uploaded file contents do not match a supported Clipforge upload format.")
 
 
 def validate_image_type(filename: str | None, content_type: str | None) -> str:
     if not content_type or content_type not in ALLOWED_CONTENT_TYPES:
-        raise FileValidationError("Only PNG, JPG, JPEG, and WEBP uploads are supported.")
+        raise FileValidationError("Only PNG, JPG, JPEG, WEBP, MP4, and MOV uploads are supported.")
 
     extension = Path(filename or "").suffix.lower()
     if not extension:
@@ -116,3 +126,21 @@ def delete_upload_file(filename: str, destination_dir: Path) -> str:
 
 def build_public_url(base_url: str, filename: str) -> str:
     return f"{base_url}/uploads/{quote(filename)}"
+
+
+def detect_media_kind(filename: str) -> str:
+    extension = Path(filename).suffix.lower()
+    if extension in VIDEO_EXTENSIONS:
+        return "video"
+    return "image"
+
+
+def _looks_like_iso_media_file(header_bytes: bytes, allowed_brands: set[bytes] | None) -> bool:
+    if len(header_bytes) < 12 or header_bytes[4:8] != b"ftyp":
+        return False
+
+    brand = header_bytes[8:12]
+    if allowed_brands is None:
+        return brand != b"qt  "
+
+    return brand in allowed_brands

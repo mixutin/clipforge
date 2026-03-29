@@ -16,7 +16,7 @@ struct UploadHistoryView: View {
             if appController.recentUploads.isEmpty {
                 emptyState(
                     title: "No uploads yet",
-                    message: "Uploaded images will appear here once Clipforge finishes a successful upload."
+                    message: "Uploaded captures will appear here once Clipforge finishes a successful upload."
                 )
             } else if filteredUploads.isEmpty {
                 emptyState(
@@ -97,8 +97,8 @@ struct UploadHistoryView: View {
     }
 
     private func historyRow(for item: UploadRecord) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            HistoryThumbnailView(data: item.thumbnailPNGData)
+            HStack(alignment: .top, spacing: 14) {
+            HistoryThumbnailView(data: item.thumbnailPNGData, mediaKind: item.mediaKind)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(item.localFilename)
@@ -123,6 +123,13 @@ struct UploadHistoryView: View {
                     appController.copyUploadContent(item)
                 }
                 .buttonStyle(.bordered)
+
+                if item.hasRecognizedText {
+                    Button("Text") {
+                        appController.copyRecognizedText(item)
+                    }
+                    .buttonStyle(.bordered)
+                }
 
                 Button("Open") {
                     appController.openUpload(item)
@@ -163,21 +170,31 @@ struct UploadHistoryView: View {
 
 private struct HistoryThumbnailView: View {
     let data: Data?
+    let mediaKind: UploadRecord.MediaKind
 
     var body: some View {
-        Group {
-            if let data, let image = NSImage(data: data) {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.primary.opacity(0.07))
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                if let data, let image = NSImage(data: data) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.primary.opacity(0.07))
 
-                    Image(systemName: "photo")
-                        .foregroundStyle(.secondary)
+                        Image(systemName: mediaKind == .video ? "video" : "photo")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+            }
+
+            if mediaKind == .video {
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.white, .black.opacity(0.45))
+                    .padding(6)
             }
         }
         .frame(width: 74, height: 74)

@@ -13,7 +13,9 @@ final class ToastPresenter {
         title: String,
         message: String,
         actionTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
     ) {
         show(
             payload: ToastPayload(
@@ -21,7 +23,9 @@ final class ToastPresenter {
                 title: title,
                 message: message,
                 actionTitle: actionTitle,
-                action: action
+                action: action,
+                secondaryActionTitle: secondaryActionTitle,
+                secondaryAction: secondaryAction
             )
         )
     }
@@ -30,7 +34,9 @@ final class ToastPresenter {
         title: String,
         message: String,
         actionTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
     ) {
         show(
             payload: ToastPayload(
@@ -38,7 +44,9 @@ final class ToastPresenter {
                 title: title,
                 message: message,
                 actionTitle: actionTitle,
-                action: action
+                action: action,
+                secondaryActionTitle: secondaryActionTitle,
+                secondaryAction: secondaryAction
             )
         )
     }
@@ -52,6 +60,11 @@ final class ToastPresenter {
 }
 
 private struct ToastPayload {
+    struct Action {
+        let title: String
+        let handler: () -> Void
+    }
+
     enum Style {
         case success
         case error
@@ -87,8 +100,30 @@ private struct ToastPayload {
     let style: Style
     let title: String
     let message: String
-    let actionTitle: String?
-    let action: (() -> Void)?
+    let actions: [Action]
+
+    init(
+        style: Style,
+        title: String,
+        message: String,
+        actionTitle: String? = nil,
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
+    ) {
+        self.style = style
+        self.title = title
+        self.message = message
+
+        var actions: [Action] = []
+        if let actionTitle, let action {
+            actions.append(Action(title: actionTitle, handler: action))
+        }
+        if let secondaryActionTitle, let secondaryAction {
+            actions.append(Action(title: secondaryActionTitle, handler: secondaryAction))
+        }
+        self.actions = actions
+    }
 }
 
 @MainActor
@@ -100,7 +135,7 @@ private final class ToastWindowController: NSWindowController {
         self.payload = payload
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 340, height: 108),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 132),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -116,8 +151,8 @@ private final class ToastWindowController: NSWindowController {
         let hostingController = NSHostingController(
             rootView: ToastView(
                 payload: payload,
-                onAction: { [weak panel] in
-                    payload.action?()
+                onAction: { [weak panel] action in
+                    action.handler()
                     panel?.close()
                 },
                 onClose: { [weak panel] in
@@ -191,7 +226,7 @@ private final class ToastWindowController: NSWindowController {
 
 private struct ToastView: View {
     let payload: ToastPayload
-    let onAction: () -> Void
+    let onAction: (ToastPayload.Action) -> Void
     let onClose: () -> Void
 
     var body: some View {
@@ -210,10 +245,16 @@ private struct ToastView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                if let actionTitle = payload.actionTitle {
-                    Button(actionTitle, action: onAction)
-                        .buttonStyle(.link)
-                        .padding(.top, 2)
+                if payload.actions.isEmpty == false {
+                    HStack(spacing: 12) {
+                        ForEach(Array(payload.actions.enumerated()), id: \.offset) { _, action in
+                            Button(action.title) {
+                                onAction(action)
+                            }
+                            .buttonStyle(.link)
+                        }
+                    }
+                    .padding(.top, 2)
                 }
             }
 
@@ -227,7 +268,7 @@ private struct ToastView: View {
             .foregroundStyle(.secondary)
         }
         .padding(14)
-        .frame(width: 340)
+        .frame(width: 360)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)

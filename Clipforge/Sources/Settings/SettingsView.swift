@@ -117,7 +117,7 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Toggle("Save a local screenshot copy after capture", isOn: settings.binding(for: \.saveLocalScreenshotEnabled))
+                Toggle("Save a local copy after capture or recording", isOn: settings.binding(for: \.saveLocalScreenshotEnabled))
 
                 Picker("Filename style", selection: settings.binding(for: \.filenameMode)) {
                     ForEach(AppSettings.FilenameMode.allCases) { mode in
@@ -189,7 +189,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Text("This only runs after a successful upload when local screenshot saving is enabled.")
+                Text("This only runs after a successful upload when local saving is enabled.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }

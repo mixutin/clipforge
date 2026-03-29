@@ -1,6 +1,6 @@
 # Clipforge Server
 
-Clipforge Server is a small self-hosted FastAPI service that accepts authenticated image uploads, stores them on local disk, and returns a public URL for the uploaded file.
+Clipforge Server is a small self-hosted FastAPI service that accepts authenticated image and short video uploads, stores them on local disk, and returns a public URL for the uploaded file.
 
 ## Endpoints
 
@@ -60,8 +60,9 @@ Clipforge Server is a small self-hosted FastAPI service that accepts authenticat
 ## Notes
 
 - Uploads are stored on local disk in `uploads/`
+- Supported upload formats are `png`, `jpg`, `jpeg`, `webp`, `mp4`, and `mov`
 - Uploads can be deleted again through `DELETE /upload/<filename>` with the same bearer token auth
 - Files are served statically from `/uploads`
-- Optional share pages are served from `/share/<filename>` and are useful for Discord-style rich embeds
+- Optional share pages are served from `/share/<filename>` and are useful for Discord-style rich embeds for both images and videos
 - CORS is disabled by default unless `CLIPFORGE_CORS_ALLOW_ORIGINS` is set
 - The built-in rate limiter is an in-memory MVP implementation and is the right place to replace with Redis or a reverse-proxy limit later

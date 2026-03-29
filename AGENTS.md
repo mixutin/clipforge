@@ -32,12 +32,15 @@ Keep these principles intact:
 - Area capture
 - Full-screen capture
 - Active-window capture
+- Scroll capture for long pages
+- Short screen clip recording and upload
 - Global hotkey support with configurable recorder UI
 - Clipboard-only capture mode
 - Automatic fallback to clipboard mode when no server is configured
 - Server upload flow with bearer token auth
 - Multiple named server profiles with one active upload target
 - Automatic copy of uploaded URL to clipboard when enabled
+- OCR text recognition with copy actions for captured images
 - Drag-and-drop image upload support in the menu bar popover
 - Clipboard image upload
 - Recent uploads with thumbnail previews
@@ -55,11 +58,13 @@ Keep these principles intact:
 - Static serving from `/uploads`
 - Bearer token protection for uploads
 - Multipart upload handling
-- File type validation
+- File type validation for images and short video clips
 - File-signature validation
 - Max upload size enforcement
 - Local disk storage
+- Upload deletion with token auth
 - Optional Open Graph share pages for embeds
+- Optional share-page metadata for video uploads
 - CORS disabled by default unless configured
 
 When changing related code, verify that these behaviors still make sense together.
@@ -122,6 +127,7 @@ When implementing features:
 - Keep server auth on `POST /upload`
 - Do not weaken upload validation, size enforcement, or default CORS behavior without explicit direction
 - If you add new upload or share behavior, think through abuse, file validation, and privacy impact
+- If you touch release automation, preserve Sparkle signing and the optional notarization path
 
 ## Validation Expectations
 
