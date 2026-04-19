@@ -207,7 +207,7 @@ jobs:
           echo "feed_dir=$FEED_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           name: ${{ steps.feed.outputs.artifact_name }}
           path: ${{ steps.feed.outputs.feed_dir }}
